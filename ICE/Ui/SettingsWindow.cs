@@ -31,6 +31,19 @@ internal class SettingsWindow : Window
 
     public override void Draw()
     {
-
+        ImGui.Text("Mission Accept/Abandon Delay (ms):");
+        var missionAbandonDelay = C.UIActionDelay;
+        if (ImGui.SliderInt("##UIActionDelay", ref missionAbandonDelay, 0, 5000))
+        {
+            C.UIActionDelay = missionAbandonDelay;
+            C.Save(); // Save the configuration change
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Reset##UIActionDelay"))
+        {
+            C.UIActionDelay = 1000; // Reset to default
+            C.Save();
+        }
+        ImGui.Separator();
     }
 }

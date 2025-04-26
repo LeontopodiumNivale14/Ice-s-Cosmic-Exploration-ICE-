@@ -10,6 +10,8 @@ public class Config : IEzConfig
 
     public List<(uint Id, string Name)> EnabledMission = new List<(uint Id, string Name)>();
 
+    public int UIActionDelay { get; set; } = 1000; // Default delay in milliseconds for mission accept/abandon
+
     public void Save()
     {
         EzConfig.Save();

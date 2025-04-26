@@ -213,7 +213,7 @@ namespace ICE.Scheduler.Tasks
                     P.taskManager.Abort();
                 }
 
-                if (EzThrottler.Throttle("Firing off to initiate quest"))
+                if (EzThrottler.Throttle("Firing off to initiate quest", C.UIActionDelay))
                 {
                     Callback.Fire(x.Base, true, 13, SchedulerMain.MissionId);
                 }
@@ -236,7 +236,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
-                    if (EzThrottler.Throttle("Confirming Abandon"))
+                    if (EzThrottler.Throttle("Confirming Abandon", C.UIActionDelay))
                     {
                         select.Yes();
                         return true;
@@ -244,12 +244,12 @@ namespace ICE.Scheduler.Tasks
                 }
                 if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var addon) && addon.IsAddonReady)
                 {
-                    if (EzThrottler.Throttle("Abandoning the mission"))
+                    if (EzThrottler.Throttle("Abandoning the mission", C.UIActionDelay))
                         addon.Abandon();
                 }
                 else if (TryGetAddonMaster<WKSHud>("WKSHud", out var SpaceHud) && SpaceHud.IsAddonReady)
                 {
-                    if (EzThrottler.Throttle("Opening the mission hud"))
+                    if (EzThrottler.Throttle("Opening the mission hud", C.UIActionDelay))
                         SpaceHud.Mission();
                 }
             }
