@@ -60,6 +60,7 @@ namespace ICE.Ui
         private static bool delayGrab = C.DelayGrab;
         private static bool doFood = C.FoodMe;
         private static bool once = C.Once;
+        private static bool areStopping = false;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -79,6 +80,7 @@ namespace ICE.Ui
             {
                 if (ImGui.Button("Start"))
                 {
+                    areStopping = false;
                     SchedulerMain.EnablePlugin();
                 }
             }
@@ -89,8 +91,26 @@ namespace ICE.Ui
             {
                 if (ImGui.Button("Stop"))
                 {
+                    areStopping = false;
                     SchedulerMain.DisablePlugin();
                 }
+            }
+
+            ImGui.SameLine();
+
+            using (ImRaii.Disabled(!SchedulerMain.AreWeTicking || areStopping))
+            {
+                if (ImGui.Button("Stop On Finish"))
+                {
+                    areStopping = true;
+                    P.taskManager.Enqueue(SchedulerMain.DisablePlugin);
+                }
+            }
+
+            if (areStopping)
+            {
+                ImGui.SameLine();
+                ImGui.Text("Stopping on mission complete");
             }
 
             if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
