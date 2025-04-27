@@ -1,4 +1,5 @@
 ﻿using ECommons.Automation;
+using ECommons.ExcelServices.TerritoryEnumeration;
 using ECommons.Logging;
 using ECommons.Throttlers;
 using System;
@@ -13,6 +14,7 @@ namespace ICE.Scheduler.Tasks
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
+        private static uint MissionScore = 0;
 
         public static void Enqueue()
         {
@@ -29,11 +31,40 @@ namespace ICE.Scheduler.Tasks
             P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission"); //
         }
 
+        private static uint ScoreMission(WKSMission.StellarMissions mission)
+        {
+            if (MissionInfoDict[mission.MissionId].JobId != GetClassJobId())
+            {
+                return 0;
+            }
+            uint score = 0;
+            int type = 1;
+            foreach (var target in C.TargetResearch)
+            {
+                if (target)
+                {
+                    if (MissionInfoDict[mission.MissionId].ExperienceRewards.Any(reward => reward.Type==type)) {
+                        score += 1;
+                    }
+                }
+
+    
+                type++;
+            }
+
+            if (C.EnabledMission.Any(e => e.Id == mission.MissionId))
+            {
+                score += 5;
+            }
+            return score;
+        }
+
         internal static bool? UpdateValues()
         {
             SchedulerMain.Abandon = false;
             SchedulerMain.MissionName = string.Empty;
             MissionId = 0;
+            MissionScore = 0;
 
             return true;
         }
@@ -86,26 +117,22 @@ namespace ICE.Scheduler.Tasks
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {
                 x.ProvisionalMissions();
-                var currentClassJob = GetClassJobId();
                 foreach (var m in x.StellerMissions)
                 {
-                    var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
-
-                    if (weatherMissionEntry == default)
-                    {
-                        PluginDebug($"weather mission entry is default. Which means id: {weatherMissionEntry}");
+                    var score = ScoreMission(m);
+                    if (score <= MissionScore)
                         continue;
-                    }
 
+                    PluginLog.Debug($"Mission Name: {m.Name} | SchedulerMain.MissionId: {m.MissionId} has been found. Setting value for sending");
+                    SchedulerMain.MissionName = m.Name;
+                    MissionId = m.MissionId;
+                    MissionScore = score;
                     if (EzThrottler.Throttle("Selecting Weather Mission"))
                     {
-                        PluginLog.Debug($"Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending");
                         m.Select();
-                        SchedulerMain.MissionName = m.Name;
-                        MissionId = weatherMissionEntry.Id;
-                        return true;
                     }
                 }
+                return true;
             }
 
             if (MissionId == 0)
@@ -131,20 +158,20 @@ namespace ICE.Scheduler.Tasks
             {
                 foreach (var m in x.StellerMissions)
                 {
-                    var basicMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId);
-
-                    if (basicMissionEntry == default)
+                    var score = ScoreMission(m);
+                    if (score <= MissionScore)
                         continue;
 
+                    PluginLog.Debug($"Mission Name: {m.Name} | SchedulerMain.MissionId: {m.MissionId} has been found. Setting value for sending");
+                    SchedulerMain.MissionName = m.Name;
+                    MissionId = m.MissionId;
+                    MissionScore = score;
                     if (EzThrottler.Throttle("Selecting Basic Mission"))
                     {
-                        PluginLog.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending");
-                        SchedulerMain.MissionName = basicMissionEntry.Name;
-                        MissionId = basicMissionEntry.Id;
                         m.Select();
-                        return true;
                     }
                 }
+                return true;
             }
 
             if (MissionId == 0)
@@ -212,7 +239,7 @@ namespace ICE.Scheduler.Tasks
 
         internal unsafe static bool? GrabMission()
         {
-            PluginLog.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
+            PluginLog.Debug($"[Grabbing Mission] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId} | SchedulerMain.MissionScore {MissionScore}");
             if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
             {
                 if (EzThrottler.Throttle("Selecting Yes", 250))

@@ -2,6 +2,7 @@
 using ECommons.Logging;
 using ECommons.Reflection;
 using ECommons.Throttlers;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace ICE.Scheduler.Tasks
             P.artisan.SetEnduranceStatus(enable);
         }
 
-        internal static bool? StartCrafting()
+        internal unsafe static bool? StartCrafting()
         {
             uint currentScore = 0;
             uint goldScore = 0;
@@ -131,6 +132,12 @@ namespace ICE.Scheduler.Tasks
                         {
                             if (EzThrottler.Throttle("Turning in item"))
                             {
+                                if (C.Once && currentScore>=goldScore)
+                                {
+                                    PluginLog.Debug($"Turning in gold in another spot: {SchedulerMain.MissionName}");
+                                    C.EnabledMission.RemoveAll(e => e.Name == SchedulerMain.MissionName);
+                                    C.Save();
+                                }
                                 z.Report();
                                 return true;
                             }

@@ -58,6 +58,9 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         private static bool delayGrab = C.DelayGrab;
+        private static bool doFood = C.FoodMe;
+        private static bool once = C.Once;
+        private static bool areStopping = false;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -77,6 +80,7 @@ namespace ICE.Ui
             {
                 if (ImGui.Button("Start"))
                 {
+                    areStopping = false;
                     SchedulerMain.EnablePlugin();
                 }
             }
@@ -87,8 +91,26 @@ namespace ICE.Ui
             {
                 if (ImGui.Button("Stop"))
                 {
+                    areStopping = false;
                     SchedulerMain.DisablePlugin();
                 }
+            }
+
+            ImGui.SameLine();
+
+            using (ImRaii.Disabled(!SchedulerMain.AreWeTicking || areStopping))
+            {
+                if (ImGui.Button("Stop On Finish"))
+                {
+                    areStopping = true;
+                    P.taskManager.Enqueue(SchedulerMain.DisablePlugin);
+                }
+            }
+
+            if (areStopping)
+            {
+                ImGui.SameLine();
+                ImGui.Text("Stopping on mission complete");
             }
 
             if (ImGui.Checkbox("Add delay to grabbing mission", ref delayGrab))
@@ -98,6 +120,39 @@ namespace ICE.Ui
                     C.DelayGrab = delayGrab;
                     C.Save();
                 }
+            }
+
+            if (ImGui.Checkbox("Once", ref once))
+            {
+                if (once != C.Once)
+                {
+                    C.Once = once;
+                    C.Save();
+                }
+            }
+
+
+            ImGui.Spacing();
+            ImGui.Text("Target Research: ");
+
+            if (ImGui.Checkbox("1", ref C.TargetResearch[0]))
+            {
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("2", ref C.TargetResearch[1]))
+            {
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("3", ref C.TargetResearch[2]))
+            {
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("4", ref C.TargetResearch[3]))
+            {
+                C.Save();
             }
 
             if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedIndex].Name))
