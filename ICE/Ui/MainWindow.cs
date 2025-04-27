@@ -58,6 +58,8 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         private static bool delayGrab = C.DelayGrab;
+        private static bool doFood = C.FoodMe;
+        private static bool once = C.Once;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -98,6 +100,48 @@ namespace ICE.Ui
                     C.DelayGrab = delayGrab;
                     C.Save();
                 }
+            }
+
+            if (ImGui.Checkbox("Food me!", ref doFood))
+            {
+                if (doFood != C.FoodMe)
+                {
+                    C.FoodMe = doFood;
+                    C.Save();
+                }
+            }
+
+            if (ImGui.Checkbox("Once", ref once))
+            {
+                if (once != C.Once)
+                {
+                    C.Once = once;
+                    C.Save();
+                }
+            }
+
+
+            ImGui.Spacing();
+            ImGui.Text("Target Research: ");
+
+            if (ImGui.Checkbox("1", ref C.TargetResearch[0]))
+            {
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("2", ref C.TargetResearch[1]))
+            {
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("3", ref C.TargetResearch[2]))
+            {
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Checkbox("4", ref C.TargetResearch[3]))
+            {
+                C.Save();
             }
 
             if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedIndex].Name))

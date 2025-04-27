@@ -39,6 +39,7 @@ namespace ICE.Scheduler
 
         internal static string MissionName = string.Empty;
         internal static uint MissionId = 0;
+        internal static uint MissionScore = 0;
         internal static bool inMission = false;
         internal static bool Abandon = false;
 

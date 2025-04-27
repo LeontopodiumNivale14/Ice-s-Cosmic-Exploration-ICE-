@@ -2,6 +2,7 @@
 using ECommons.Logging;
 using ECommons.Reflection;
 using ECommons.Throttlers;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,25 @@ namespace ICE.Scheduler.Tasks
         public static void Enqueue()
         {
             P.taskManager.Enqueue(() => SetArtisanEndur(false));
+            P.taskManager.Enqueue(SetFood);
             P.taskManager.Enqueue(() => StartCrafting(), DConfig);
         }
 
         internal unsafe static void SetArtisanEndur(bool enable)
         {
+            PluginLog.Information($"[Running Mission] Mission Name: {SchedulerMain.MissionName} Score: {SchedulerMain.MissionScore}");
             P.artisan.SetEnduranceStatus(enable);
+        }
+
+        internal unsafe static bool SetFood()
+        {
+            if (!C.FoodMe)
+                return true;
+            if (Svc.ClientState.LocalPlayer.StatusList.Any(x => x.StatusId == 48 & x.RemainingTime > 300f))
+                return true;
+            if (!EzThrottler.Throttle("Eating food"))
+                return false;
+            return ActionManager.Instance()->UseAction(ActionType.Item, 1044091, extraParam: 65535);
         }
 
         internal unsafe static bool? StartCrafting()
@@ -58,6 +72,12 @@ namespace ICE.Scheduler.Tasks
                     {
                         if (EzThrottler.Throttle("Turning in item"))
                         {
+                            PluginLog.Debug($"Turning in gold in another spot: {(SchedulerMain.MissionId, SchedulerMain.MissionName)}");
+                            if (C.Once)
+                            {
+                                C.EnabledMission.Remove((SchedulerMain.MissionId, SchedulerMain.MissionName));
+                                C.Save();
+                            }
                             z.Report();
                             return true;
                         }

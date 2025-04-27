@@ -27,6 +27,12 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (EzThrottler.Throttle("Turning in item"))
                     {
+                        PluginLog.Debug($"Turning in gold: {(SchedulerMain.MissionId, SchedulerMain.MissionName)}");
+                        if (C.Once)
+                        {
+                            C.EnabledMission.Remove((SchedulerMain.MissionId, SchedulerMain.MissionName));
+                            C.Save();
+                        }
                         x.Report();
                         return true;
                     }
