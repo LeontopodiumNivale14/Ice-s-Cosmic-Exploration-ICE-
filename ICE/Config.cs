@@ -12,7 +12,6 @@ public class Config : IEzConfig
 
     public bool DelayGrab = false;
 
-    public bool FoodMe = false;
     public bool Once = false;
 
     public bool[] TargetResearch = [false, false, false, false];

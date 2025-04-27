@@ -58,7 +58,6 @@ namespace ICE.Ui
         private static string selectedRankName = rankOptions[selectedRankIndex].RankName;
 
         private static bool delayGrab = C.DelayGrab;
-        private static bool doFood = C.FoodMe;
         private static bool once = C.Once;
         private static bool areStopping = false;
 
