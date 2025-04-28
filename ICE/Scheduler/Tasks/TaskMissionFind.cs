@@ -14,7 +14,7 @@ namespace ICE.Scheduler.Tasks
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
-        private static uint MissionScore = 0;
+        private static int MissionScore = 0;
 
         public static void Enqueue()
         {
@@ -31,30 +31,27 @@ namespace ICE.Scheduler.Tasks
             P.taskManager.Enqueue(() => AbandonMission(), "Checking to see if need to leave mission"); //
         }
 
-        private static uint ScoreMission(WKSMission.StellarMissions mission)
+        private static int ScoreMission(WKSMission.StellarMissions mission)
         {
             if (MissionInfoDict[mission.MissionId].JobId != GetClassJobId())
             {
                 return 0;
             }
-            uint score = 0;
+            int score = 0;
             int type = 1;
             foreach (var target in C.TargetResearch)
             {
                 if (target)
                 {
-                    if (MissionInfoDict[mission.MissionId].ExperienceRewards.Any(reward => reward.Type==type)) {
-                        score += 1;
-                    }
+                    score += MissionInfoDict[mission.MissionId].ExperienceRewards.Where(reward => reward.Type==type).Sum(reward => reward.Amount);
                 }
-
-    
                 type++;
             }
 
             if (C.EnabledMission.Any(e => e.Id == mission.MissionId))
             {
-                score += 5;
+                return 0;
+//                score += 100;
             }
             return score;
         }
@@ -147,12 +144,6 @@ namespace ICE.Scheduler.Tasks
         internal unsafe static bool? FindBasicMission()
         {
             PluginLog.Debug($"[Basic Mission Start] | Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}");
-            if (MissionId != 0)
-            {
-                PluginLog.Debug("You already have a mission found, skipping finding a basic mission");
-                return true;
-            }
-
 
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
             {

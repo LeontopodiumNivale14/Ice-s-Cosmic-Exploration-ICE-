@@ -85,6 +85,46 @@ internal class DebugWindow : Window
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNode("Research"))
+        {
+            if (TryGetAddonMaster<WKSToolCustomize>("WKSToolCustomize", out var x) && x.IsAddonReady)
+            {
+                ImGui.Text("List of Visible Missions");
+                ImGui.Text($"Selected Class: {x.SelectedClass}");
+
+                
+                ImGui.Text("Current Research: ");
+                foreach (var research in x.CurrentResearch)
+                {
+                    ImGui.SameLine();
+                    ImGui.Text($"{research} ");
+                }
+
+                ImGui.Text("Target Research: ");
+                foreach (var research in x.TargetResearch)
+                {
+                    ImGui.SameLine();
+                    ImGui.Text($"{research} ");
+                }
+
+                ImGui.Text("Max Research: ");
+                foreach (var research in x.MaxResearch)
+                {
+                    ImGui.SameLine();
+                    ImGui.Text($"{research} ");
+                }
+
+                ImGui.Text("Need Research: ");
+                foreach (var research in x.CurrentResearch.Zip(x.TargetResearch, (cur, targ) => cur<targ))
+                {
+                    ImGui.SameLine();
+                    ImGui.Text($"{research} ");
+                }
+
+            }
+            ImGui.TreePop();
+        }
+
         if (ImGui.TreeNode("Missions"))
         {
             if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)

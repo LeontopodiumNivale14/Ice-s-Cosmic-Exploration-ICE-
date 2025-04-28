@@ -134,24 +134,13 @@ namespace ICE.Ui
             ImGui.Spacing();
             ImGui.Text("Target Research: ");
 
-            if (ImGui.Checkbox("1", ref C.TargetResearch[0]))
+            for (int research = 0; research < C.TargetResearch.Length; research++)
             {
-                C.Save();
-            }
-            ImGui.SameLine();
-            if (ImGui.Checkbox("2", ref C.TargetResearch[1]))
-            {
-                C.Save();
-            }
-            ImGui.SameLine();
-            if (ImGui.Checkbox("3", ref C.TargetResearch[2]))
-            {
-                C.Save();
-            }
-            ImGui.SameLine();
-            if (ImGui.Checkbox("4", ref C.TargetResearch[3]))
-            {
-                C.Save();
+                ImGui.SameLine();
+                if (ImGui.Checkbox($"{research+1}", ref C.TargetResearch[research]))
+                {
+                    C.Save();
+                }
             }
 
             if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedIndex].Name))
