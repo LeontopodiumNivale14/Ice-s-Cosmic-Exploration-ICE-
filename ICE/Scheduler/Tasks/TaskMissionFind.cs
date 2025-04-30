@@ -13,6 +13,8 @@ namespace ICE.Scheduler.Tasks
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
+        private static uint currentClassJob => GetClassJobId();
+        private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
 
         public static void Enqueue()
         {
@@ -33,9 +35,7 @@ namespace ICE.Scheduler.Tasks
                         }
                     }
 
-                    MissionId = CurrentLunarMission;
-                    SchedulerMain.MissionName = MissionInfoDict[MissionId].Name;
-                    SchedulerMain.State = IceState.StartCraft;
+                    StartMission();
 
                     return;
                 }
@@ -96,7 +96,7 @@ namespace ICE.Scheduler.Tasks
                                 await Task.Delay(500);
                             }
 
-                            SchedulerMain.State = IceState.StartCraft;
+                            StartMission();
                         }
                     }
                 }
@@ -339,6 +339,25 @@ namespace ICE.Scheduler.Tasks
             }
 
             return false;
+        }
+
+        private static void StartMission()
+        {
+            if (C.OnlyGrabMission || MissionInfoDict[currentClassJob].JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            {
+                SchedulerMain.State = IceState.ManualMode;
+            }
+            else if (isGatherer)
+            {
+                //Change to GathererMode Later
+                SchedulerMain.State = IceState.ManualMode;
+            }
+            else
+            {
+                MissionId = CurrentLunarMission;
+                SchedulerMain.MissionName = MissionInfoDict[MissionId].Name;
+                SchedulerMain.State = IceState.StartCraft;
+            }
         }
     }
 }
