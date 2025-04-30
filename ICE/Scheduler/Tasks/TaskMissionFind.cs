@@ -163,9 +163,20 @@ namespace ICE.Scheduler.Tasks
                 x.ProvisionalMissions();
                 var currentClassJob = GetClassJobId();
 
+                var weatherIds = C.WeatherMissions.Select(w => w.Id).ToHashSet();
+                var sequenceIds = C.SequenceMissions.Select(s => s.Id).ToHashSet();
+                var timedIds = C.TimedMissions.Select(t => t.Id).ToHashSet();
+
                 var sortedMissions = x.StellerMissions
-                    .Where(m => C.WeatherMissions.Any(w => w.Id == m.MissionId))
-                    .Concat(x.StellerMissions.Where(m => !C.WeatherMissions.Any(w => w.Id == m.MissionId))) 
+                    .Where(m => weatherIds.Contains(m.MissionId))
+                    .Concat(
+                        x.StellerMissions.Where(m =>
+                            !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId))
+                    )
+                    .Concat(
+                        x.StellerMissions.Where(m =>
+                            !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId))
+                    )
                     .ToArray();
 
                 foreach (var m in sortedMissions)
