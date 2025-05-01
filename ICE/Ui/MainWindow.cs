@@ -159,6 +159,9 @@ namespace ICE.Ui
                 {
                     SchedulerMain.DisablePlugin();
                 }
+
+                ImGui.SameLine();
+                ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
             }
 
             ImGui.SameLine();
@@ -490,6 +493,19 @@ namespace ICE.Ui
             }
 
             ImGui.EndTabItem();
+        }
+
+        public void DrawDebugTab()
+        {
+            var tab = ImRaii.TabItem("Debug");
+
+            if (!tab)
+                return;
+
+            if(ImGui.Button("ExitCraft"))
+            {
+                ExecuteCommand(711);
+            }
         }
 
         public static void DrawLink(string label, string link, string url)

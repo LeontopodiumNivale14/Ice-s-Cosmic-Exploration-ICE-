@@ -25,11 +25,15 @@ namespace ICE.Scheduler.Tasks
 
         public static void TryEnqueueCrafts()
         {
-            ItemSheet ??= Svc.Data.GetExcelSheet<Item>(); // Only need to grab once, it won't change
-            RecipeSheet ??= Svc.Data.GetExcelSheet<Recipe>(); // Only need to grab once, it won't change
-
+            EnsureInit();
             if (CurrentLunarMission != 0)
                 MakeCraftingTasks();
+        }
+
+        private static void EnsureInit()
+        {
+            ItemSheet ??= Svc.Data.GetExcelSheet<Item>(); // Only need to grab once, it won't change
+            RecipeSheet ??= Svc.Data.GetExcelSheet<Recipe>(); // Only need to grab once, it won't change
         }
 
         internal static bool IsArtisanBusy()
@@ -49,6 +53,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static void MakeCraftingTasks()
         {
+            EnsureInit();
             var (currentScore, silverScore, goldScore) = GetCurrentScores();
 
             if (currentScore == 0 && silverScore == 0 && goldScore == 0)
@@ -79,14 +84,8 @@ namespace ICE.Scheduler.Tasks
             if (!P.TaskManager.IsBusy) // ensure no pending tasks or manual craft while plogon enabled
             {
                 SchedulerMain.State = IceState.CraftInProcess;
-                if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
-                {
-                    if (EzThrottler.Throttle("Opening Steller Missions"))
-                    {
-                        PluginLog.Debug("Opening Mission Menu");
-                        hud.Mission();
-                    }
-                }
+
+                OpenStellaMission();
 
                 var needPreCraft = false;
                 var itemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
@@ -208,6 +207,7 @@ namespace ICE.Scheduler.Tasks
 
         internal static (uint currentScore, uint silverScore, uint goldScore) GetCurrentScores()
         {
+            EnsureInit();
             if (TryGetAddonMaster<WKSMissionInfomation>("WKSMissionInfomation", out var z) && z.IsAddonReady)
             {
                 var goldScore = MissionInfoDict[CurrentLunarMission].GoldRequirement;
@@ -238,8 +238,28 @@ namespace ICE.Scheduler.Tasks
 
         internal static bool? WaitTillActuallyDone(ushort id, int craftAmount, Item item)
         {
+            var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
+
+            if (C.TurninOnSilver && currentScore >= silverScore)
+            {
+                P.Artisan.SetEnduranceStatus(false);
+                return true;
+            }
+            else if (currentScore >= goldScore)
+            {
+                P.Artisan.SetEnduranceStatus(false);
+                return true;
+            }
+
+
             if (GetItemCount((int)item.RowId) != craftAmount)
             {
+                if (P.Artisan.GetEnduranceStatus() == false && Svc.Condition[ConditionFlag.PreparingToCraft] && GetItemCount((int)item.RowId) != craftAmount)
+                {
+                    PluginLog.Error("Endurance is off, we are not doing anything but not complete?");
+                    return true;
+                }
+
                 if (LogThrottle)
                 {
                     PluginLog.Debug("Waiting for Artisan to finish crafting");
@@ -247,6 +267,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 return false;
             }
+
 
             PluginLog.Debug("Returning true");
             return true;
@@ -260,6 +281,39 @@ namespace ICE.Scheduler.Tasks
             }
 
             return false;
+        }
+
+        internal static bool HaveEnoughMain()
+        {
+            EnsureInit();
+            if (LogThrottle)
+            {
+                PluginLog.Debug($"[Item(s) Check] Checking.");
+            }
+
+            foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
+            {
+                var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
+                var mainNeed = main.Value;
+                var currentAmount = GetItemCount((int)itemId);
+                var mainItemName = ItemSheet.GetRow(itemId).Name.ToString();
+
+                PluginLog.Debug($"[Item(s) Check] Curr: {currentAmount} - Need: {mainNeed}");
+                if (currentAmount < mainNeed)
+                {
+                    if (LogThrottle)
+                    {
+                        PluginLog.Debug($"[Item(s) Check] You currently don't have the required amount of item: {ItemSheet.GetRow(itemId).Name}.");
+                    }
+                    return false;
+                }
+            }
+
+            if (LogThrottle)
+            {
+                PluginLog.Debug($"[Item(s) Check] You currently have the required amount of items.");
+            }
+            return true;
         }
     }
 }

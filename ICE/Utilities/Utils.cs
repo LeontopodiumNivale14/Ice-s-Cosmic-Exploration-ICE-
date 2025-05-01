@@ -5,6 +5,7 @@ using ECommons;
 using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices.Legacy;
 using ECommons.ExcelServices;
+using ECommons.EzHookManager;
 using ECommons.GameHelpers;
 using ECommons.Logging;
 using ECommons.Reflection;
@@ -21,11 +22,18 @@ using Lumina;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
 using static Dalamud.Game.Text.SeStringHandling.Payloads.ItemPayload;
+using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
 namespace ICE.Utilities;
 
 public static unsafe class Utils
 {
+    public const string ExecuteCommandSignature = "E8 ?? ?? ?? ?? 8D 46 0A";
+    internal delegate nint ExecuteCommandDelegate(int command, int a1 = 0, int a2 = 0, int a3 = 0, int a4 = 0);
+    internal static ExecuteCommandDelegate? ExecuteCommand = EzDelegate.Get<ExecuteCommandDelegate>(ExecuteCommandSignature);
+    [EzHook(ExecuteCommandSignature, false)]
+    internal static readonly EzHook<ExecuteCommandDelegate> ExecuteCommandHook = null!;
+
     #region Plugin/Ecoms stuff
 
     public static bool HasPlugin(string name) => DalamudReflector.TryGetDalamudPlugin(name, out _, false, true);
@@ -46,6 +54,18 @@ public static unsafe class Utils
     {
         if (EzThrottler.Throttle(message, 1000))
             PluginLog.Warning(message);
+    }
+
+    public static void OpenStellaMission()
+    {
+        if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
+        {
+            if (EzThrottler.Throttle("Opening Steller Missions"))
+            {
+                PluginLog.Debug("Opening Mission Menu");
+                hud.Mission();
+            }
+        }
     }
 
     #endregion
