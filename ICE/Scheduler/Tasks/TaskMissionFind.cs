@@ -1,7 +1,10 @@
 ﻿using ECommons.Automation;
 using ECommons.Logging;
 using ECommons.Throttlers;
+using ECommons.UIHelpers.AddonMasterImplementations;
+using ICE.Ui;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,12 +16,47 @@ namespace ICE.Scheduler.Tasks
     internal static class TaskMissionFind
     {
         private static uint MissionId = 0;
+        private static uint currentClassJob => GetClassJobId();
+        private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
+        private static bool hasCritical => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.CriticalMissions.Select(critical => critical.Id))
+                                            .Any();
+        private static bool hasWeather => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.WeatherMissions.Select(weather => weather.Id))
+                                            .Any();
+        private static bool hasTimed => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.TimedMissions.Select(timed => timed.Id))
+                                            .Any();
+        private static bool hasSequence => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.SequenceMissions.Select(sequence => sequence.Id))
+                                            .Any();
+        private static bool hasStandard => C.EnabledMission
+                                            .Where(e => MissionInfoDict[e.Id].JobId == currentClassJob)
+                                            .Where(e => !UnsupportedMissions.Ids.Contains(e.Id))
+                                            .Select(enabled => enabled.Id)
+                                            .Intersect(C.StandardMissions.Select(standard => standard.Id))
+                                            .Any();
 
         public static void EnqueueResumeCheck()
         {
             if (CurrentLunarMission != 0)
             {
-                SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                if (!ModeChangeCheck(isGatherer))
+                {
+                    SchedulerMain.State = IceState.CheckScoreAndTurnIn;
+                }
             }
             else
             {
@@ -28,6 +66,22 @@ namespace ICE.Scheduler.Tasks
 
         public static void Enqueue()
         {
+
+            if (SchedulerMain.StopOnceHitCredits)
+            {
+                if (TryGetAddonMaster<AddonMaster.WKSHud>("WKSHud", out var hud) && hud.IsAddonReady)
+                {
+                    if (hud.LunarCredit >= 10000)
+                    {
+                        PluginLog.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} credits");
+                        SchedulerMain.StopBeforeGrab = false;
+                        SchedulerMain.StopOnceHitCredits = false;
+                        SchedulerMain.State = IceState.Idle;
+                        return;
+                    }
+                }
+            }
+
             if (SchedulerMain.StopBeforeGrab)
             {
                 SchedulerMain.StopBeforeGrab = false;
@@ -37,16 +91,22 @@ namespace ICE.Scheduler.Tasks
 
             if (SchedulerMain.State != IceState.GrabMission)
                 return;
-
+            
             SchedulerMain.State = IceState.GrabbingMission;
+
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
+            // if (hasCritical) {
             P.TaskManager.Enqueue(() => CriticalButton(), "Selecting Critical Mission");
             P.TaskManager.EnqueueDelay(200);
             P.TaskManager.Enqueue(() => FindCriticalMission(), "Checking to see if critical mission available");
+            // }
+            //if (hasWeather || hasTimed || hasSequence) // Skip Checks if enabled mission doesn't have weather, timed or sequence?
+            //{
             P.TaskManager.Enqueue(() => WeatherButton(), "Selecting Weather");
             P.TaskManager.EnqueueDelay(200);
-            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission available");
+            P.TaskManager.Enqueue(() => FindWeatherMission(), "Checking to see if weather mission avaialable");
+            //}
             P.TaskManager.Enqueue(() => BasicMissionButton(), "Selecting Basic Missions");
             P.TaskManager.EnqueueDelay(200);
             P.TaskManager.Enqueue(() => FindBasicMission(), "Finding Basic Mission");
@@ -68,10 +128,9 @@ namespace ICE.Scheduler.Tasks
             {
                 if (CurrentLunarMission != 0)
                 {
-                    var currentClassJob = GetClassJobId();
-                    bool isGatherer = currentClassJob >= 16 && currentClassJob <= 18;
                     if (TryGetAddonMaster<WKSHud>("WKSHud", out var hud) && hud.IsAddonReady && !IsAddonActive("WKSMissionInfomation"))
                     {
+                        var gatherer = isGatherer;
                         if (EzThrottler.Throttle("Opening Steller Missions"))
                         {
                             PluginLog.Debug("Opening Mission Menu");
@@ -82,17 +141,7 @@ namespace ICE.Scheduler.Tasks
                                 PluginLog.Debug("Waiting for WKSMissionInfomation to be active");
                                 await Task.Delay(500);
                             }
-
-                            if (C.OnlyGrabMission)
-                            {
-                                SchedulerMain.State = IceState.ManualMode;
-                            }
-                            else if (isGatherer) {
-                                //Change to GathererMode Later
-                                SchedulerMain.State = IceState.ManualMode;
-                            }
-                            else
-                            {
+                            if (!ModeChangeCheck(gatherer)) {
                                 SchedulerMain.State = IceState.StartCraft;
                             }
                         }
@@ -204,7 +253,24 @@ namespace ICE.Scheduler.Tasks
             {
                 x.ProvisionalMissions();
                 var currentClassJob = GetClassJobId();
-                foreach (var m in x.StellerMissions)
+
+                var weatherIds = C.WeatherMissions.Select(w => w.Id).ToHashSet();
+                var sequenceIds = C.SequenceMissions.Select(s => s.Id).ToHashSet();
+                var timedIds = C.TimedMissions.Select(t => t.Id).ToHashSet();
+
+                var sortedMissions = x.StellerMissions
+                    .Where(m => weatherIds.Contains(m.MissionId))
+                    .Concat(
+                        x.StellerMissions.Where(m =>
+                            !weatherIds.Contains(m.MissionId) && !sequenceIds.Contains(m.MissionId))
+                    )
+                    .Concat(
+                        x.StellerMissions.Where(m =>
+                            !weatherIds.Contains(m.MissionId) && !timedIds.Contains(m.MissionId))
+                    )
+                    .ToArray();
+
+                foreach (var m in sortedMissions)
                 {
                     var weatherMissionEntry = C.EnabledMission.FirstOrDefault(e => e.Id == m.MissionId && MissionInfoDict[e.Id].JobId == currentClassJob);
 
@@ -379,6 +445,24 @@ namespace ICE.Scheduler.Tasks
                     if (EzThrottler.Throttle("Opening the mission hud"))
                         SpaceHud.Mission();
                 }
+            }
+
+            return false;
+        }
+
+        private static bool ModeChangeCheck(bool gatherer)
+        {
+            if (C.OnlyGrabMission || MissionInfoDict[CurrentLunarMission].JobId2 != 0) // Manual Mode for Only Grab Mission / Dual Class Mission
+            {
+                SchedulerMain.State = IceState.ManualMode;
+                return true;
+            }
+            else if (gatherer)
+            {
+                //Change to GathererMode Later
+                SchedulerMain.State = IceState.ManualMode;
+
+                return true;
             }
 
             return false;

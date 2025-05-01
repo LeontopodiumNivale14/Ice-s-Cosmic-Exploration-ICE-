@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ICE.Enums;
 using Dalamud.Interface.Colors;
 using System.Drawing;
+using System.Reflection;
 
 namespace ICE.Ui
 {
@@ -97,12 +98,13 @@ namespace ICE.Ui
         // Configuration booleans bound to checkboxes.
         private static bool delayGrab = C.DelayGrab;
         private static bool silverTurnin = C.TurninOnSilver;
-        private static bool craftx2 = C.CraftMultipleMissionItems;
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
+        private static bool showOverlay = C.ShowOverlay;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
+        private static bool showExp = C.ShowExpColums;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -145,8 +147,6 @@ namespace ICE.Ui
                 if (ImGui.Button("Start"))
                 {
                     SchedulerMain.EnablePlugin();
-                    C.StopNextLoop = false;
-                    C.Save();
                 }
             }
 
@@ -162,20 +162,11 @@ namespace ICE.Ui
 
                 ImGui.SameLine();
                 ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
+                ImGui.SameLine();
+                ImGui.Checkbox("Stop once hit lunar credits cap", ref SchedulerMain.StopOnceHitCredits);
             }
 
             ImGui.SameLine();
-
-            // Stop Next Loop
-            using (ImRaii.Disabled(SchedulerMain.State == IceState.Idle || C.StopNextLoop))
-            {
-                if (ImGui.Button("Finish Current Cycle"))
-                {
-                    C.StopNextLoop = true;
-                    C.Save();
-                }
-            }
-
             ImGui.Spacing();
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
@@ -254,14 +245,7 @@ namespace ICE.Ui
             .Where(m => m.Value.JobId == selectedJobId - 1)
             .Where(m => m.Value.IsCriticalMission);
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
-            DrawMissionsDropDown($"Critical Missions", criticalMissions);
-
-            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
-                    MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
-                        .Where(m => m.Value.Time != 0);
-            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
+            DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", criticalMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
@@ -269,20 +253,35 @@ namespace ICE.Ui
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
-            DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
+            DrawMissionsDropDown($"Weather-restricted Missions - {weatherRestrictedMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", weatherRestrictedMissions);
+
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Time != 0);
+            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", timeRestrictedMissions);
+
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.PreviousMissionID != 0);
+            sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
+            DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", sequentialMissions);
 
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
+                        .Where(m => m.Value.PreviousMissionID == 0)
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
-                DrawMissionsDropDown($"Class {rank.RankName} Missions", missions);
+                DrawMissionsDropDown($"Class {rank.RankName} Missions - {missions.Count(x => C.EnabledMission.Any(y => y.Id == x.Key))} enabled", missions);
             }
 
             ImGui.EndTabItem();
@@ -290,39 +289,83 @@ namespace ICE.Ui
 
         public void DrawMissionsDropDown(string tabName, IEnumerable<KeyValuePair<uint, MissionListInfo>> missions)
         {
-            if (ImGui.CollapsingHeader(tabName))
+            var tabId = tabName.Split('-')[0];
+            if (ImGui.CollapsingHeader(string.Format("{0}###{1}", tabName, tabId)))
             {
                 ImGui.Spacing();
                 // Missions table with four columns: checkbox, ID, dynamic Rank header, Rewards.
-                if (ImGui.BeginTable($"MissionList###{tabName}", 10, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+
+                int columnAmount = 6;
+                if (showExp)
+                    columnAmount += 4;
+
+                if (ImGui.BeginTable($"MissionList###{tabId}", columnAmount, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
                 {
                     var sortSpecs = ImGui.TableGetSortSpecs();
                     float col1Width = 0;
                     float col2Width = 0;
-                    float col3Width = 0;
+                    float col3Width = 15;
                     float col4Width = 0;
+
+                    // used to keep track of where the column index is at, mainly for centering text
+                    int columnIndex = 0;
 
                     // First column: checkbox (empty header)
                     ImGui.TableSetupColumn("Enable##Enable");
+                    columnIndex++;
+
                     // Second column: ID
                     ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed, col1Width);
+                    columnIndex++;
+
                     // Third column: dynamic header showing selected rank missions
                     ImGui.TableSetupColumn("Mission Name", ImGuiTableColumnFlags.WidthFixed, col2Width);
+                    columnIndex++;
+
                     // Fourth column: Rewards
                     ImGui.TableSetupColumn("Cosmocredits");
-                    ImGui.TableSetupColumn("Lunar Credits");
+                    columnIndex++;
 
+                    ImGui.TableSetupColumn("Lunar Credits");
+                    columnIndex++;
+
+                    // Dynamic EXP columns
                     IOrderedEnumerable<KeyValuePair<int, string>> orderedExp = ExpDictionary.ToList().OrderBy(exp => exp.Key);
-                    foreach (var exp in orderedExp)
+                    if (C.ShowExpColums) // Option to not show the EXP Columns if they'd like
                     {
-                        ImGui.TableSetupColumn(exp.Value);
+                        foreach (var exp in orderedExp)
+                        {
+                            ImGui.TableSetupColumn($"###{exp.Value}", ImGuiTableColumnFlags.WidthFixed, col3Width);
+                            col3Width = Math.Max(col3Width, ImGui.CalcTextSize(exp.Value).X + 5);
+                            columnIndex++;
+                        }
                     }
 
+                    // Final column: Notes
                     ImGui.TableSetupColumn("Notes", ImGuiTableColumnFlags.WidthStretch);
 
-                    // Render the header row
+                    // Render the header row (static headers get drawn here)
                     ImGui.TableHeadersRow();
-                    
+
+                    // Manually center the EXP headers (more personal OCD here)
+                    int dynamicStartCol = columnIndex - orderedExp.Count();
+                    int dynamicCol = 0;
+
+                    if (C.ShowExpColums)
+                    {
+                        foreach (var exp in orderedExp)
+                        {
+                            ImGui.TableSetColumnIndex(dynamicStartCol + dynamicCol++);
+                            float colWidth = ImGui.GetColumnWidth();
+                            Vector2 textSize = ImGui.CalcTextSize(exp.Value);
+                            float offset = (colWidth - textSize.X) / 2;
+
+                            if (offset > 0)
+                                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+                            ImGui.TextUnformatted(exp.Value);
+                        }
+                    }
 
                     foreach (var entry in missions)
                     {
@@ -388,15 +431,20 @@ namespace ICE.Ui
                         CenterTextInTableCell(entry.Value.CosmoCredit.ToString());
                         ImGui.TableNextColumn();
                         CenterTextInTableCell(entry.Value.LunarCredit.ToString());
-                        foreach (var expType in orderedExp)
+
+                        if (showExp) // If show EXP Values are enabled, will show the exp values. 
                         {
-                            ImGui.TableNextColumn();
-                            var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
-                            if (relicXp == "0")
+                            foreach (var expType in orderedExp)
                             {
-                                relicXp = "-";
+                                ImGui.TableNextColumn();
+                                var relicXp = entry.Value.ExperienceRewards.Where(exp => exp.Type == expType.Key).FirstOrDefault().Amount.ToString();
+                                if (relicXp == "0")
+                                {
+                                    relicXp = "-";
+                                }
+                                col3Width = Math.Max(ImGui.CalcTextSize(relicXp).X + 10, col3Width);
+                                CenterTextInTableCell(relicXp);
                             }
-                            CenterTextInTableCell(relicXp);
                         }
                         
                         // debug
@@ -409,6 +457,11 @@ namespace ICE.Ui
                         {
 
                             ImGui.Text($"{2 * (entry.Value.Time - 1)}:00 - {2 * (entry.Value.Time)}:00");
+                        }
+                        else if (entry.Value.PreviousMissionID != 0)
+                        {
+                            var (Id, Name) = MissionInfoDict.Where(m => m.Key == entry.Value.PreviousMissionID).Select(m => (Id: m.Key, Name: m.Value.Name)).FirstOrDefault();
+                            ImGui.Text($"[{Id}] {Name}");
                         }
                     }
 
@@ -443,12 +496,6 @@ namespace ICE.Ui
                     C.TurninASAP = false;
                 }
 
-                if (C.CraftMultipleMissionItems)
-                {
-                    C.CraftMultipleMissionItems = false;
-                    craftx2 = false;
-                }
-
                 if (silverTurnin != C.TurninOnSilver)
                 {
                     C.TurninOnSilver = silverTurnin;
@@ -456,20 +503,6 @@ namespace ICE.Ui
                 }
 
 
-            }
-
-            // Checkbox: If Silver is enabled, allow for x2 crafting
-            if (silverTurnin)
-            {
-                ImGui.SameLine();
-                if (ImGui.Checkbox("Craft item twice", ref craftx2))
-                {
-                    if (craftx2 != C.CraftMultipleMissionItems)
-                    {
-                        C.CraftMultipleMissionItems = craftx2;
-                        C.Save();
-                    }
-                }
             }
 
             // Checkbox: Turn in ASAP.
@@ -489,6 +522,19 @@ namespace ICE.Ui
             if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
             {
                 C.OnlyGrabMission = onlyGrabMission;
+                C.Save();
+            }
+
+            if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+            {
+                C.ShowOverlay = showOverlay;
+                C.Save();
+            }             
+            
+            ImGui.Spacing();
+            if (ImGui.Checkbox($"Show EXP on Columns", ref showExp))
+            {
+                C.ShowExpColums = showExp;
                 C.Save();
             }
 

@@ -17,4 +17,10 @@ internal static unsafe class PlayerHandlers
     {
         return AgentMap.Instance()->IsPlayerMoving;
     }
+
+    internal static void Tick()
+    {
+        if (IsInZone(1237) && UsingSupportedJob() && C.ShowOverlay) ICE.P.overlayWindow.IsOpen = true;
+        else ICE.P.overlayWindow.IsOpen = false;
+    }
 }

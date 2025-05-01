@@ -15,16 +15,7 @@ namespace ICE.Scheduler.Tasks
         {
             if (CurrentLunarMission == 0)
             {
-                if (C.StopNextLoop)
-                {
-                    SchedulerMain.DisablePlugin();
-                    C.StopNextLoop = false;
-                    C.Save();
-                }
-                else
-                {
-                    SchedulerMain.State = IceState.GrabMission;
-                }
+                SchedulerMain.State = IceState.GrabMission;
             }
         }
     }

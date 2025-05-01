@@ -12,6 +12,7 @@ namespace ICE.Scheduler
         internal static bool DisablePlugin()
         {
             P.TaskManager.Abort();
+            StopBeforeGrab = false;
             State = IceState.Idle;
             return true;
         }
@@ -20,6 +21,7 @@ namespace ICE.Scheduler
         internal static bool inMission = false;
         internal static bool Abandon = false;
         internal static bool StopBeforeGrab = false;
+        internal static bool StopOnceHitCredits = false;
 
 
         internal static IceState State = IceState.Idle;
