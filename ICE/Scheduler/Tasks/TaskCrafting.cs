@@ -106,7 +106,7 @@ namespace ICE.Scheduler.Tasks
 
                     PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
 
-                    if (currentScore > 0 && currentScore < (C.TurninOnSilver ? silverScore : goldScore))
+                    if (currentScore > 0 && currentScore < (C.TurninOnSilver ? silverScore : goldScore) && HaveEnoughMain())
                     {
                         // we have some score but not enough to turn in, lets pretend we need 1 more item
                         mainNeed += currentAmount + 1;
