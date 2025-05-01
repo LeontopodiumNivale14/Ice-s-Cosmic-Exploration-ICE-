@@ -87,23 +87,16 @@ namespace ICE.Scheduler.Tasks
 
                 OpenStellaMission();
 
+                var shouldPanic = false;
                 var needPreCraft = false;
                 var itemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
                 var preItemsToCraft = new Dictionary<ushort, Tuple<int, int>>();
-
-                var mainCrafts = MoonRecipies[CurrentLunarMission].MainCraftsDict;
-
-                int craftsDone = mainCrafts.Sum(main => GetItemCount((int)RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId));
-                int craftsNeeded = mainCrafts.Sum(main => main.Value);
-                int CraftMultipleMissionItems = (craftsDone / craftsNeeded) + 1;
-                PluginDebug($"[Loop] Number: {CraftMultipleMissionItems} | Items Done: {craftsDone} | Items Needed: {craftsNeeded}");
 
                 foreach (var main in MoonRecipies[CurrentLunarMission].MainCraftsDict)
                 {
                     var itemId = RecipeSheet.GetRow(main.Key).ItemResult.Value.RowId;
                     var subItem = RecipeSheet.GetRow(main.Key).Ingredient[0].Value.RowId; // need to directly reference this in the future
                     var mainNeed = main.Value;
-                    var subItemNeed = RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * main.Value;
                     var currentAmount = GetItemCount((int)itemId);
                     var currentSubItemAmount = GetItemCount((int)subItem);
                     var mainItemName = ItemSheet.GetRow(itemId).Name.ToString();
@@ -112,12 +105,17 @@ namespace ICE.Scheduler.Tasks
                     PluginDebug($"ItemID: {itemId}");
 
                     PluginDebug($"[Main Item(s)] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
+
+                    if (currentScore > 0 && currentScore < (C.TurninOnSilver ? silverScore : goldScore))
+                    {
+                        // we have some score but not enough to turn in, lets pretend we need 1 more item
+                        mainNeed += currentAmount + 1;
+                    }
+
+                    int craftAmount = mainNeed - currentAmount;
+                    var subItemNeed = RecipeSheet.GetRow(main.Key).AmountIngredient[0].ToInt() * craftAmount;
+
                     PluginDebug($"[Main Item(s)] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
-                    // if (C.CraftMultipleMissionItems)
-                    // {
-                        subItemNeed = subItemNeed * CraftMultipleMissionItems;
-                        mainNeed = mainNeed * CraftMultipleMissionItems;
-                    // }
 
                     if (currentAmount < mainNeed)
                     {
@@ -127,18 +125,18 @@ namespace ICE.Scheduler.Tasks
                         if (currentSubItemAmount >= subItemNeed)
                         {
                             PluginDebug($"[Main Item(s) You have the required amount to make the necessary amount of main items. Continuing on");
-                            int craftAmount = mainNeed - currentAmount;
                             itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                         }
                         else
                         {
-                            int craftAmount = mainNeed - currentAmount;
                             itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                             needPreCraft = true;
+                            PluginDebug($"[Pre-craft Items] We need precrafts");
                         }
                     }
                 }
 
+                PluginDebug($"[Pre-craft Items] Do we need any precrafts? {needPreCraft}");
                 if (needPreCraft)
                 {
                     PluginDebug($"[Pre-craft Items] You need pre-craft items. Starting the process of finding pre-crafts");
@@ -151,6 +149,16 @@ namespace ICE.Scheduler.Tasks
                         PluginDebug($"[Pre-Crafts] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
                         var goalAmount = pre.Value;
 
+                        var preSubItem = RecipeSheet.GetRow(pre.Key).Ingredient[0].Value.RowId;
+                        var preSubItemCount = GetItemCount((int)preSubItem);
+                        if (preSubItemCount == 0)
+                        {
+                            PluginLog.Error($"[Pre-Crafts] You don't have any of the sub item for {PreCraftItemName} [{itemId}] aborting...");
+                            shouldPanic = true;
+                            break;
+                        }
+
+
                         if (currentAmount < goalAmount)
                         {
                             PluginDebug($"[Pre-Crafts] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
@@ -158,6 +166,12 @@ namespace ICE.Scheduler.Tasks
                             preItemsToCraft.Add(pre.Key, new(craftAmount, goalAmount));
                         }
                     }
+                }
+
+                if (shouldPanic)
+                {
+                    SchedulerMain.State = IceState.AbortInProgress;
+                    return;
                 }
 
                 P.TaskManager.BeginStack(); // Enable stack mode
@@ -177,7 +191,7 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
                         P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
-                           TimeLimitMS = 240000, // 4 minute limit per craft
+                            TimeLimitMS = 240000, // 4 minute limit per craft
                         });
                     }
                 }
@@ -195,7 +209,7 @@ namespace ICE.Scheduler.Tasks
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
                         P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
-                           TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
+                            TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
                     }
                 }
