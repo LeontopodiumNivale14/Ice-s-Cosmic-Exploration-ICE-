@@ -45,6 +45,9 @@ namespace ICE.Scheduler
                     case IceState.CheckScoreAndTurnIn:
                         TaskScoreCheck.TryCheckScore();
                         break;
+                    case IceState.ManualMode:
+                        TaskManualMode.ZenMode();
+                        break;
                     case IceState.ResumeChecker:
                         TaskMissionFind.EnqueueResumeCheck();
                         break;
@@ -65,6 +68,7 @@ namespace ICE.Scheduler
         CheckScoreAndTurnIn,
         WaitForCrafts,
         ResumeChecker,
+        ManualMode,
         AbortInProgress
     }
 }

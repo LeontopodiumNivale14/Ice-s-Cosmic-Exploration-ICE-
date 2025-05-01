@@ -501,6 +501,31 @@ public static unsafe class Utils
                 };
             }
         }
+        C.CriticalMissions = MissionInfoDict
+                                .Where(m => m.Value.IsCriticalMission)
+                                .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
+                                .ToList();
+        C.TimedMissions = MissionInfoDict
+                                .Where(m => m.Value.Time != 0)
+                                .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
+                                .ToList();
+        C.WeatherMissions = MissionInfoDict
+                                .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
+                                .Where(m => !m.Value.IsCriticalMission)
+                                .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
+                                .ToList();
+        C.SequenceMissions = MissionInfoDict
+                                .Where(m => SequentialMissions.Contains((int) m.Key))
+                                .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
+                                .ToList();
+        C.StandardMissions = MissionInfoDict
+                                .Where(m => Ranks.Contains(m.Value.Rank) || ARankIds.Contains(m.Value.Rank))
+                                .Where(m => !m.Value.IsCriticalMission)
+                                .Where(m => m.Value.Time == 0)
+                                .Where(m => m.Value.Weather == CosmicWeather.FairSkies)
+                                .Select(mission => (Id: mission.Key, Name: mission.Value.Name))
+                                .ToList();
+        C.Save();
     }
 
     #endregion

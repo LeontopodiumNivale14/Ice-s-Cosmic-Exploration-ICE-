@@ -24,6 +24,7 @@ public static unsafe class Data
     public static HashSet<string> ALCMissions = new HashSet<string>();
     public static HashSet<string> CULMissions = new HashSet<string>();
 
+    public static HashSet<uint> Ranks = new HashSet<uint>() { 1, 2, 3, 4 };
     public static HashSet<uint> ARankIds = new HashSet<uint>() { 4, 5, 6 };
     public static HashSet<uint> CriticalMissionIds = new HashSet<uint>();
 
@@ -32,6 +33,21 @@ public static unsafe class Data
     public static HashSet<int> WeatherMissionList = new() { 30, 31, 32, };
     public static HashSet<int> TimedMissionList = new() { 40, 43, };
     public static HashSet<int> CriticalMissions = new() { 512, 513, 514,  };
+    public static HashSet<int> SequentialMissions = new()
+    {
+        34, 36, 37, 39, 41, 42, 44, 45, // CRP
+        79, 81, 82, 84, 86, 87, 89, 90, // BSM
+        124, 126, 127, 129, 131, 132, 134, 135, // ARM
+        169, 171, 172, 174, 176, 177, 179, 180, // GSM
+        214, 216, 217, 219, 221, 222, 224, 225, // LTW
+        259, 261, 262, 264, 266, 267, 269, 270, // WVR
+        304, 306, 307, 309, 311, 312, 314, 315, // ALC
+        349, 351, 352, 354, 356, 357, 359, 360, // CUL
+
+        394, 396, 397, 399, 401, 402, 404, 405, // MIN
+        439, 441, 442, 444, 446, 447, 449, 450, // BTN
+        484, 486, 487, 489, 491, 492, 494, 495, // FSH
+    };
 
     #region Dictionaries
 

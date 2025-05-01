@@ -42,7 +42,7 @@ namespace ICE.Ui
             P.windowSystem.RemoveWindow(this);
         }
 
-        // Available crafting jobs and their IDs.
+        // Available jobs and their IDs.
         private static List<(string Name, uint Id)> jobOptions = new()
         {
             ("CRP", 9),
@@ -53,6 +53,9 @@ namespace ICE.Ui
             ("WVR", 14),
             ("ALC", 15),
             ("CUL", 16),
+            ("MIN", 17),
+            ("BTN", 18),
+            ("FSH", 19),
         };
 
         // Available mission ranks and their identifiers.
@@ -81,6 +84,10 @@ namespace ICE.Ui
         private static int selectedJobIndex = 0;
         // ID of the currently selected crafting job.
         private static uint selectedJobId = jobOptions[selectedJobIndex].Id;
+        private static uint currentJobId => GetClassJobId();
+        private static bool isCrafter => currentJobId >= 8 && currentJobId <= 15;
+        private static bool isGatherer => currentJobId >= 16 && currentJobId <= 18;
+        private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId + 1);
 
         // Index of the currently selected rank in rankOptions.
         private static int selectedRankIndex = 0;
@@ -93,6 +100,8 @@ namespace ICE.Ui
         private static bool craftx2 = C.CraftMultipleMissionItems;
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
+        private static bool onlyGrabMission = C.OnlyGrabMission;
+        private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
 
         /// <summary>
@@ -131,7 +140,7 @@ namespace ICE.Ui
             ImGui.Spacing();
 
             // Start button (disabled while already ticking).
-            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle))
+            using (ImRaii.Disabled(SchedulerMain.State != IceState.Idle || !usingSupportedJob))
             {
                 if (ImGui.Button("Start"))
                 {
@@ -153,25 +162,46 @@ namespace ICE.Ui
                 ImGui.Checkbox("Stop after current mission", ref SchedulerMain.StopBeforeGrab);
             }
 
-            // Crafting Job selection combo.
-            ImGui.SetNextItemWidth(150);
-            if (ImGui.BeginCombo("Crafting Job", jobOptions[selectedJobIndex].Name))
-            {
-                for (int i = 0; i < jobOptions.Count; i++)
-                {
-                    bool isSelected = (i == selectedJobIndex);
-                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
-                    {
-                        selectedJobIndex = i;
-                        selectedJobId = jobOptions[i].Id;
-                    }
-                    if (isSelected)
-                    {
-                        ImGui.SetItemDefaultFocus();
-                    }
-                }
-                ImGui.EndCombo();
+            ImGui.SameLine();
+            ImGui.Spacing();
+
+            if (C.AutoPickCurrentJob && usingSupportedJob)
+            {    
+                selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId + 1);
+                selectedJobId = jobOptions[selectedJobIndex].Id;
+
+                ImGui.Text($"Job: " + jobOptions[selectedJobIndex].Name);
             }
+            else
+            {
+                // Crafting Job selection combo.
+                ImGui.SetNextItemWidth(150);
+                if (ImGui.BeginCombo("Job", jobOptions[selectedJobIndex].Name))
+                {
+                    for (int i = 0; i < jobOptions.Count; i++)
+                    {
+                        bool isSelected = (i == selectedJobIndex);
+                        if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                        {
+                            selectedJobIndex = i;
+                            selectedJobId = jobOptions[i].Id;
+                        }
+                        if (isSelected)
+                        {
+                            ImGui.SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+            }
+
+            if (ImGui.Checkbox("Auto Pick Current Job", ref autoPickCurrentJob))
+            {
+                C.AutoPickCurrentJob = autoPickCurrentJob;
+                C.Save();
+            }
+
+            ImGui.Spacing();
 
             // Checkbox: Hide unsupported missions.
             if (ImGui.Checkbox("Hide unsupported missions", ref hideUnsupported))
@@ -213,13 +243,6 @@ namespace ICE.Ui
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
             DrawMissionsDropDown($"Critical Missions", criticalMissions);
 
-            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
-                    MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
-                        .Where(m => m.Value.Time != 0);
-            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
-            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
-
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
                         .Where(m => m.Value.JobId == selectedJobId - 1)
@@ -228,14 +251,29 @@ namespace ICE.Ui
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
             DrawMissionsDropDown($"Weather-restricted Missions", weatherRestrictedMissions);
 
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.Time != 0);
+            timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
+            DrawMissionsDropDown($"Time-restricted Missions", timeRestrictedMissions);
+
+            IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
+                    MissionInfoDict
+                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => SequentialMissions.Contains((int)m.Key));
+            sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
+            DrawMissionsDropDown($"Sequential Missions", sequentialMissions);
+
             foreach (var rank in rankOptions.OrderBy(r => r.RankName))
             {
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
+                        .Where(m => !SequentialMissions.Contains((int)m.Key))
                         .Where(m => m.Value.Weather == CosmicWeather.FairSkies);
                 missions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(missions);
 
@@ -440,6 +478,12 @@ namespace ICE.Ui
                 }
 
                 C.TurninASAP = turninASAP;
+                C.Save();
+            }
+
+            if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
+            {
+                C.OnlyGrabMission = onlyGrabMission;
                 C.Save();
             }
 
