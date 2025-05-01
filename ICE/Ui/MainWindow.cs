@@ -101,6 +101,7 @@ namespace ICE.Ui
         private static bool turninASAP = C.TurninASAP;
         private static bool hideUnsupported = C.HideUnsupportedMissions;
         private static bool onlyGrabMission = C.OnlyGrabMission;
+        private static bool showOverlay = C.ShowOverlay;
         private static bool autoPickCurrentJob = C.AutoPickCurrentJob;
         private static int SortOption = C.TableSortOption;
 
@@ -489,6 +490,12 @@ namespace ICE.Ui
             if (ImGui.Checkbox("Only Grab Mission", ref onlyGrabMission))
             {
                 C.OnlyGrabMission = onlyGrabMission;
+                C.Save();
+            }
+
+            if (ImGui.Checkbox("Show Overlay", ref showOverlay))
+            {
+                C.ShowOverlay = showOverlay;
                 C.Save();
             }
 

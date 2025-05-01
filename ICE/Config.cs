@@ -17,6 +17,9 @@ namespace ICE
         public List<(uint Id, string Name)> SequenceMissions { get; set; } = new List<(uint, string)>();
         public List<(uint Id, string Name)> StandardMissions { get; set; } = new List<(uint, string)>();
 
+        // Overlay settings
+        public bool ShowOverlay { get; set; } = false;
+
         // Delay grabbing mission
         public bool DelayGrab { get; set; } = false;
 
