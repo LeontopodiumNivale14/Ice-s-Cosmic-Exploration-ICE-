@@ -221,6 +221,35 @@ public static unsafe class Utils
         return textNode->NodeText.GetText();
     }
 
+    public static unsafe AtkTextNode* GetAtkTextNode(string addonName, params int[] nodeNumbers)
+    {
+        var ptr = Svc.GameGui.GetAddonByName(addonName, 1);
+
+        var addon = (AtkUnitBase*)ptr;
+        var uld = addon->UldManager;
+
+        AtkResNode* node = null;
+        var debugString = string.Empty;
+        for (var i = 0; i < nodeNumbers.Length; i++)
+        {
+            var nodeNumber = nodeNumbers[i];
+
+            var count = uld.NodeListCount;
+
+            node = uld.NodeList[nodeNumber];
+            debugString += $"[{nodeNumber}]";
+
+            // More nodes to traverse
+            if (i < nodeNumbers.Length - 1)
+            {
+                uld = ((AtkComponentNode*)node)->Component->UldManager;
+            }
+        }
+
+        var textNode = (AtkTextNode*)node;
+        return textNode;
+    }
+
     private static unsafe AtkResNode* GetNodeByIDChain(AtkResNode* node, params int[] ids)
     {
         if (node == null || ids.Length <= 0)
@@ -556,6 +585,12 @@ public static unsafe class Utils
         { 3, "III" },
         { 4, "IV" }
     };
+
+    #endregion
+
+    #region Helper
+
+    public static string ReadableEnum(string input) => System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
 
     #endregion
 }

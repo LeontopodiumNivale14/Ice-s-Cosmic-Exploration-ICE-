@@ -136,7 +136,7 @@ namespace ICE.Ui
                 "Unsupported missions will be disabled and shown in red; check 'Hide unsupported missions' to filter them out."
             );
 
-            ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
+            ImGui.Text($"Current state: " + ReadableEnum(SchedulerMain.State.ToString()));
 
 
             ImGui.Spacing();
@@ -451,7 +451,7 @@ namespace ICE.Ui
                         ImGui.TableNextColumn();
                         if (entry.Value.Weather != CosmicWeather.FairSkies)
                         {
-                            ImGui.Text(entry.Value.Weather.ToString());
+                            ImGui.Text(ReadableEnum(entry.Value.Weather.ToString()));
                         }
                         else if (entry.Value.Time != 0)
                         {

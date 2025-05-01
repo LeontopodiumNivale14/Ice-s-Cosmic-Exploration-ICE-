@@ -23,7 +23,7 @@ namespace ICE.Ui
 
         public override void Draw()
         {
-            ImGui.Text($"Current state: " + SchedulerMain.State.ToString());
+            ImGui.Text($"Current state: " + ReadableEnum(SchedulerMain.State.ToString()));
             ImGui.Spacing();
 
             if (ImGuiEx.IconButton("\uf013##Config", "Open ICE"))
