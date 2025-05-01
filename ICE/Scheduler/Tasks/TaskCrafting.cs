@@ -109,7 +109,7 @@ namespace ICE.Scheduler.Tasks
                     if (currentScore > 0 && currentScore < (C.TurninOnSilver ? silverScore : goldScore) && HaveEnoughMain())
                     {
                         // we have some score but not enough to turn in, lets pretend we need 1 more item
-                        mainNeed += currentAmount + 1;
+                        mainNeed += 1;
                     }
 
                     int craftAmount = mainNeed - currentAmount;
