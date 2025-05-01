@@ -189,7 +189,7 @@ namespace ICE.Scheduler.Tasks
                         PluginDebug($"[Craft] Adding precraft {pre}");
                         P.TaskManager.Enqueue(() => Craft(pre.Key, pre.Value.Item1, item), "PreCraft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(pre.Key, pre.Value.Item2, item), $"Waiting for {pre.Value.Item2} item(s)", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft
                         });
@@ -207,7 +207,7 @@ namespace ICE.Scheduler.Tasks
                         PluginDebug($"[Craft] Adding craft {main}");
                         P.TaskManager.Enqueue(() => Craft(main.Key, main.Value.Item1, item), "Craft item");
                         P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
-                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), "Wait for item", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
+                        P.TaskManager.Enqueue(() => WaitTillActuallyDone(main.Key, main.Value.Item2, item), $"Waiting for {main.Value.Item2} item(s)", new ECommons.Automation.NeoTaskManager.TaskManagerConfiguration()
                         {
                             TimeLimitMS = 240000, // 4 minute limit per craft, maybe need to work out a reasonable time? experts more? maybe 1m 30s per item?
                         });
@@ -280,12 +280,12 @@ namespace ICE.Scheduler.Tasks
         {
             var (currentScore, silverScore, goldScore) = GetCurrentScores(); // some scoring checks
 
-            if (C.TurninOnSilver && currentScore >= silverScore)
+            if (C.TurninOnSilver && currentScore >= silverScore && HaveEnoughMain())
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;
             }
-            else if (currentScore >= goldScore)
+            else if (currentScore >= goldScore && HaveEnoughMain())
             {
                 P.Artisan.SetEnduranceStatus(false);
                 return true;
