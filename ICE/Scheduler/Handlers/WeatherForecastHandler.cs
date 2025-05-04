@@ -51,6 +51,14 @@ namespace ICE.Scheduler.Handlers
             return WeatherSheet.GetRow(currWeatherId);
         }
 
+        internal static unsafe uint GetCurrentWeatherId()
+        {
+            if (!IsInCosmicZone()) return default;
+
+            Weather currWeather = GetCurrentWeather();
+            return currWeather.RowId;
+        }
+
         internal static unsafe (string, string, string) GetNextWeather()
         {
             if (!IsInCosmicZone()) return default;

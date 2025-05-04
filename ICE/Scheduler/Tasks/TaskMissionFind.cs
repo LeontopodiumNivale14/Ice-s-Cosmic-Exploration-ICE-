@@ -2,6 +2,7 @@
 using ECommons.Logging;
 using ECommons.Throttlers;
 using ECommons.UIHelpers.AddonMasterImplementations;
+using ICE.Scheduler.Handlers;
 using ICE.Ui;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -84,6 +85,10 @@ namespace ICE.Scheduler.Tasks
 
             SchedulerMain.State = IceState.GrabbingMission;
 
+            // Attempt to swap jobs
+            P.TaskManager.Enqueue(() => JobSwap(), "Job Swapping");
+            P.TaskManager.EnqueueDelay(200);
+
             P.TaskManager.Enqueue(() => UpdateValues(), "Updating Task Mission Values");
             P.TaskManager.Enqueue(() => OpenMissionFinder(), "Opening the Mission finder");
             // if (hasCritical) {
@@ -139,6 +144,38 @@ namespace ICE.Scheduler.Tasks
                     }
                 }
             });
+        }
+
+        internal static bool? JobSwap()
+        {
+            bool needSwap = false;
+            uint swapId = 0;
+            if (C.EnableWeatherJobSwap)
+            {
+                var currentWeatherId = WeatherForecastHandler.GetCurrentWeatherId();
+                if (currentWeatherId == 49)
+                {
+                    needSwap = true;
+                    swapId = C.UmbralWindJobId;
+                } else if (currentWeatherId == 148)
+                {
+                    needSwap = true;
+                    swapId = C.MoonDustJobId;
+                }
+            }
+            if (C.EnableTimeJobSwap && !needSwap)
+            {
+                var currentHour = (int)PlayerHandlers.GetCurrentHour() / 2;
+                needSwap = true;
+                swapId = C.JobSwapTable[currentHour];
+            }
+            if (needSwap && GetClassJobId() != swapId)
+            {
+                PluginLog.Debug($"[Job Swap] Swapping to {swapId}");
+                GearsetHandler.SwapJob(swapId);
+                return false;
+            }
+            return true;
         }
 
         internal static bool? UpdateValues()
@@ -362,8 +399,8 @@ namespace ICE.Scheduler.Tasks
                         .ToArray();
 
                 var rankToReset = missionRanks.Max();
-
-                foreach (var m in x.StellerMissions)
+                var r = new Random();
+                foreach (var m in x.StellerMissions.OrderBy(x => r.Next()))
                 {
                     var missionEntry = MissionInfoDict.FirstOrDefault(e => e.Key == m.MissionId);
 
