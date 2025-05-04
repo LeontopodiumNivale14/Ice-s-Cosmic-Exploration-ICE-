@@ -47,17 +47,17 @@ namespace ICE.Ui
         // Available jobs and their IDs.
         private static List<(string Name, uint Id)> jobOptions = new()
         {
-            ("CRP", 9),
-            ("BSM", 10),
-            ("ARM", 11),
-            ("GSM", 12),
-            ("LTW", 13),
-            ("WVR", 14),
-            ("ALC", 15),
-            ("CUL", 16),
-            ("MIN", 17),
-            ("BTN", 18),
-            ("FSH", 19),
+            ("CRP", 8),
+            ("BSM", 9),
+            ("ARM", 10),
+            ("GSM", 11),
+            ("LTW", 12),
+            ("WVR", 13),
+            ("ALC", 14),
+            ("CUL", 15),
+            ("MIN", 16),
+            ("BTN", 17),
+            ("FSH", 18),
         };
 
         // Available mission ranks and their identifiers.
@@ -89,7 +89,7 @@ namespace ICE.Ui
         private static uint? currentJobId => GetClassJobId();
         private static bool isCrafter => currentJobId >= 8 && currentJobId <= 15;
         private static bool isGatherer => currentJobId >= 16 && currentJobId <= 18;
-        private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId + 1);
+        private static bool usingSupportedJob => jobOptions.Any(job => job.Id == currentJobId);
 
         // Index of the currently selected rank in rankOptions.
         private static int selectedRankIndex = 0;
@@ -109,6 +109,8 @@ namespace ICE.Ui
         private static int SortOption = C.TableSortOption;
         private static bool showExp = C.ShowExpColums;
         private static bool showCredits = C.ShowCreditsColumn;
+        private static bool enableWeatherJobSwap = C.EnableWeatherJobSwap;
+        private static bool enableTimeJobSwap = C.EnableTimeJobSwap;
 
         /// <summary>
         /// Primary draw method. Responsible for drawing the entire UI of the main window.
@@ -121,6 +123,7 @@ namespace ICE.Ui
 
             DrawMissionsTab();
             DrawConfigTab();
+            DrawJobSwapTab();
         }
 
         public void DrawMissionsTab()
@@ -170,7 +173,7 @@ namespace ICE.Ui
 
             if (C.AutoPickCurrentJob && usingSupportedJob)
             {    
-                selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId + 1);
+                selectedJobIndex = jobOptions.IndexOf(job => job.Id == currentJobId);
                 selectedJobId = jobOptions[selectedJobIndex].Id;
 
                 ImGui.Text($"Job: " + jobOptions[selectedJobIndex].Name);
@@ -227,14 +230,14 @@ namespace ICE.Ui
             ImGui.SetNextItemWidth(100);
             IEnumerable<KeyValuePair<uint, MissionListInfo>> criticalMissions =
                 MissionInfoDict
-            .Where(m => m.Value.JobId == selectedJobId - 1)
+            .Where(m => m.Value.JobId == selectedJobId)
             .Where(m => m.Value.IsCriticalMission);
             criticalMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(criticalMissions);
             DrawMissionsDropDown($"Critical Missions - {criticalMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", criticalMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> weatherRestrictedMissions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId)
                         .Where(m => m.Value.Weather != CosmicWeather.FairSkies)
                         .Where(m => !m.Value.IsCriticalMission);
             weatherRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(weatherRestrictedMissions);
@@ -242,14 +245,14 @@ namespace ICE.Ui
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> timeRestrictedMissions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId)
                         .Where(m => m.Value.Time != 0);
             timeRestrictedMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(timeRestrictedMissions);
             DrawMissionsDropDown($"Time-restricted Missions - {timeRestrictedMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", timeRestrictedMissions);
 
             IEnumerable<KeyValuePair<uint, MissionListInfo>> sequentialMissions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId)
                         .Where(m => m.Value.PreviousMissionID != 0);
             sequentialMissions = sortOptions.FirstOrDefault(s => s.Id == SortOption).SortFunc(sequentialMissions);
             DrawMissionsDropDown($"Sequential Missions - {sequentialMissions.Count(x => C.Missions.Any(y => y.Id == x.Key && y.Enabled))} enabled", sequentialMissions);
@@ -258,7 +261,7 @@ namespace ICE.Ui
             {
                 IEnumerable<KeyValuePair<uint, MissionListInfo>> missions =
                     MissionInfoDict
-                        .Where(m => m.Value.JobId == selectedJobId - 1 || m.Value.JobId2 == selectedJobId - 1)
+                        .Where(m => m.Value.JobId == selectedJobId || m.Value.JobId2 == selectedJobId)
                         .Where(m => (m.Value.Rank == rank.RankId) || (rank.RankName == "A" && ARankIds.Contains(m.Value.Rank)))
                         .Where(m => !m.Value.IsCriticalMission)
                         .Where(m => m.Value.Time == 0)
@@ -582,6 +585,107 @@ namespace ICE.Ui
                 C.Save();
             }
 
+            ImGui.EndTabItem();
+        }
+
+        public void DrawJobSwapTab()
+        {
+
+            var tab = ImRaii.TabItem("Job Swap");
+
+            if (!tab)
+                return;
+            //
+            if (ImGui.Checkbox("Enable Weather Based Job Swap", ref enableWeatherJobSwap))
+            {
+                C.EnableWeatherJobSwap = enableWeatherJobSwap;
+                C.Save();
+            }
+
+            ImGui.SetNextItemWidth(75);
+            if (ImGui.BeginCombo("Umbral Wind", jobOptions.Where(x => x.Id == C.UmbralWindJobId).First().Name))
+            {
+                for (int i = 0; i < jobOptions.Count; i++)
+                {
+                    bool isSelected = (jobOptions[i].Id == C.UmbralWindJobId);
+                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                    {
+                        C.UmbralWindJobId = jobOptions[i].Id;
+                    }
+                    if (isSelected)
+                    {
+                        ImGui.SetItemDefaultFocus();
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.SetNextItemWidth(75);
+            if (ImGui.BeginCombo("Moon Dust", jobOptions.Where(x => x.Id == C.MoonDustJobId).First().Name))
+            {
+                for (int i = 0; i < jobOptions.Count; i++)
+                {
+                    bool isSelected = (jobOptions[i].Id == C.MoonDustJobId);
+                    if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                    {
+                        C.MoonDustJobId = jobOptions[i].Id;
+                    }
+                    if (isSelected)
+                    {
+                        ImGui.SetItemDefaultFocus();
+                    }
+                }
+                ImGui.EndCombo();
+            }
+
+            ImGui.EndTabItem();
+            // Checkbox: Enable time based job swapping
+            if (ImGui.Checkbox("Enable Time Based Job Swap", ref enableTimeJobSwap))
+            {
+                C.EnableTimeJobSwap = enableTimeJobSwap;
+                C.Save();
+            }
+
+            if (ImGui.BeginTable($"TimeJobTable", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+            {
+                ImGui.TableSetupColumn("Time");
+                ImGui.TableSetupColumn("Job");
+                ImGui.TableSetupColumn("Timed Missions");
+                ImGui.TableHeadersRow();
+                for (int row = 0; row < 12; row++)
+                {
+                    ImGui.TableNextRow();
+                    ImGui.TableSetColumnIndex(0);
+                    ImGui.Text($"{2 * row}:00 - {2 * (row + 1)}:00");
+                    ImGui.TableSetColumnIndex(1);
+                    ImGui.SetNextItemWidth(75);
+                    if (ImGui.BeginCombo($"##TimeJob{row}", jobOptions.Where(x => x.Id == C.JobSwapTable[row]).First().Name))
+                    {
+                        for (int i = 0; i < jobOptions.Count; i++)
+                        {
+                            bool isSelected = (jobOptions[i].Id == C.JobSwapTable[row]);
+                            if (ImGui.Selectable(jobOptions[i].Name, isSelected))
+                            {
+                                C.JobSwapTable[row] = jobOptions[i].Id;
+                            }
+                            if (isSelected)
+                            {
+                                ImGui.SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui.EndCombo();
+                    }
+                    ImGui.TableSetColumnIndex(2);
+                    if (PlayerHandlers.timeMap.TryGetValue((2 * row, 2 * row + 1), out var timedMissions))
+                    {
+                        ImGui.Text(timedMissions.Join(", "));
+                    }
+                    else
+                    {
+                        ImGui.Text("None");
+                    }
+                }
+                ImGui.EndTable();
+            }
             ImGui.EndTabItem();
         }
 

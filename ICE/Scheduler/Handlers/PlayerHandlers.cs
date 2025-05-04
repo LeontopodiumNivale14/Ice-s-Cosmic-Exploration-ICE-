@@ -55,6 +55,12 @@ internal static unsafe class PlayerHandlers
         return (hours, minutes);
     }
 
+    internal static long GetCurrentHour()
+    {
+        var (hours, minutes) = GetEorzeaTime();
+        return hours;
+    }
+
     internal static (KeyValuePair<(int start, int end), string[]>, KeyValuePair<(int start, int end), string[]>) GetTimedJob()
     {
         KeyValuePair<(int start, int end), string[]> currentTimeBonus = default;

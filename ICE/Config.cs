@@ -30,7 +30,14 @@ namespace ICE
         public bool ShowCreditsColumn { get; set; } = true;
 
         // Misc settings
-        public bool EnableAutoSprint {  get; set; } = true;
+        public bool EnableAutoSprint { get; set; } = true;
+
+        // Job swap settings
+        public bool EnableWeatherJobSwap { get; set; } = false;
+        public uint UmbralWindJobId { get; set; } = 9;
+        public uint MoonDustJobId { get; set; } = 9;
+        public bool EnableTimeJobSwap { get; set; } = false;
+        public Dictionary<int, uint> JobSwapTable = Enumerable.Range(0, 12).ToDictionary(i => i, i => (uint)9);
 
         public void Save()
         {
