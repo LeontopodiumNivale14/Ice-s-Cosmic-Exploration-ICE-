@@ -82,7 +82,7 @@ public static unsafe class Utils
         }
     }
 
-    public static unsafe void SetGatheringRing(uint teri, int x, int y, int radius)
+    public static unsafe void SetGatheringRing(uint teri, float x, float y, int radius)
     {
         var agent = AgentMap.Instance();
         var debugText = "Current teri/map: {currentTeri} {currentMap}" + ", " + agent->CurrentTerritoryId
@@ -94,7 +94,8 @@ public static unsafe class Utils
 
         agent->IsFlagMarkerSet = false;
         agent->SetFlagMapMarker(teri, mapId, x, y);
-        agent->AddGatheringTempMarker(x, y, radius, tooltip: "Node Location");
+        agent->TempMapMarkerCount = 0;
+        agent->AddGatheringTempMarker((int)x, (int)y, radius, tooltip: "Node Location");
         agent->OpenMap(agent->CurrentMapId, teri, "Node Location", FFXIVClientStructs.FFXIV.Client.UI.Agent.MapType.GatheringLog);
     }
 }

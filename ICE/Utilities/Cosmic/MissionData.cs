@@ -49,6 +49,10 @@ public static unsafe partial class CosmicHelper
         public uint CosmoCredit { get; set; }
         public uint LunarCredit { get; set; }
         public uint PreviousMissionID { get; set; }
+        public uint MarkerId { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public int Radius { get; set; }
 
         public List<(int Type, int Amount)> ExperienceRewards { get; set; }
     }
