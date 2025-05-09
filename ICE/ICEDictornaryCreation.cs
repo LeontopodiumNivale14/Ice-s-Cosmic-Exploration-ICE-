@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using ICE.Enums;
 using Lumina.Excel.Sheets;
 using static ICE.Utilities.CosmicHelper;
@@ -19,6 +20,9 @@ public sealed partial class ICE
         var ExpSheet = Svc.Data.GetExcelSheet<WKSMissionReward>();
         var ToDoSheet = Svc.Data.GetExcelSheet<WKSMissionToDo>();
         var MoonItemInfo = Svc.Data.GetExcelSheet<WKSItemInfo>();
+        var MarkerSheet = Svc.Data.GetExcelSheet<WKSMissionMapMarker>();
+
+        var wk = WKSManager.Instance();
 
         foreach (var item in MoonMissionSheet)
         {
@@ -63,6 +67,13 @@ public sealed partial class ICE
             uint RecipeId = item.WKSMissionRecipe;
 
             uint toDoValue = item.Unknown7;
+
+            var todo = ToDoSheet.GetRow((uint)(item.Unknown7 + *((byte*)wk + 0xC62)));
+            var marker = MarkerSheet.GetRow(todo.Unknown13);
+
+            Vector2 Pos = new Vector2(marker.Unknown1 - 1024, marker.Unknown2 - 1024);
+            ushort Radius = marker.Unknown3;
+
             if (CrafterJobList.Contains(JobId))
             {
                 bool preCraftsbool = false;
@@ -296,7 +307,11 @@ public sealed partial class ICE
                     CosmoCredit = Cosmo,
                     LunarCredit = Lunar,
                     ExperienceRewards = Exp,
-                    PreviousMissionID = previousMissionId
+                    PreviousMissionID = previousMissionId,
+                    MarkerId = marker.RowId,
+                    X = Pos.X,
+                    Y = Pos.X,
+                    Radius = Radius,
                 };
             }
         }
