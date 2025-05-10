@@ -160,6 +160,7 @@ namespace ICE.Scheduler.Tasks
         {
             if (CosmicHelper.CurrentLunarMission == 0)
             {
+                TaskMissionFind.BlacklistedMission.Clear();
                 SchedulerMain.State = IceState.GrabMission;
                 return true;
             }

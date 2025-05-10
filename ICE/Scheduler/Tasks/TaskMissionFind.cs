@@ -20,9 +20,12 @@ namespace ICE.Scheduler.Tasks
         private static uint? currentClassJob => PlayerHelper.GetClassJobId();
         private static bool isGatherer => currentClassJob >= 16 && currentClassJob <= 18;
 
+        private static uint LockedOutCounter = 0;
+        public static HashSet<uint> BlacklistedMission = [];
+
         private static IEnumerable<CosmicMission> CriticalMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Critical && x.Enabled);
-        private static IEnumerable<CosmicMission> WeatherMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Weather && x.Enabled);
-        private static IEnumerable<CosmicMission> TimedMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Timed && x.Enabled);
+        private static IEnumerable<CosmicMission> WeatherMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Weather && x.Enabled).Where(x => !BlacklistedMission.Contains(x.Id));
+        private static IEnumerable<CosmicMission> TimedMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Timed && x.Enabled).Where(x => !BlacklistedMission.Contains(x.Id));
         private static IEnumerable<CosmicMission> SequenceMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Enabled).Where(x => x.Type == MissionType.Sequential && C.Missions.Any(y => y.PreviousMissionId == x.Id)); // might be bad logic but should work and these fields arent used rn anyway
         private static IEnumerable<CosmicMission> StandardMissions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Standard && x.Enabled);
         private static IEnumerable<CosmicMission> A2Missions => C.Missions.Where(x => CosmicHelper.MissionInfoDict[x.Id].JobId == currentClassJob || CosmicHelper.MissionInfoDict[x.Id].JobId2 == currentClassJob).Where(x => x.Type == MissionType.Standard && CosmicHelper.MissionInfoDict[x.Id].Rank == 5 && x.Enabled);
@@ -495,6 +498,12 @@ namespace ICE.Scheduler.Tasks
                 }
                 else if (!AddonHelper.IsAddonActive("WKSMission"))
                 {
+                    if (CosmicHelper.CurrentLunarMission == 0 && CosmicHelper.MissionInfoDict[MissionId].Time != 0) // If Mission is Locked
+                    {
+                        BlacklistedMission.Add(MissionId);
+                        SchedulerMain.State = IceState.GrabMission;
+                        P.TaskManager.Abort();
+                    }
                     return true;
                 }
             }
