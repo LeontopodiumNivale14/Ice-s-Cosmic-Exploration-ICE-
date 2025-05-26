@@ -102,7 +102,7 @@ public static unsafe class Utils
     {
         var map = ExcelHelper.TerritorySheet.GetRow(territoryId).Map.Value;
         var agent = AgentMap.Instance();
-        
+
         Vector2 pos = MapToWorld(new Vector2(x, y), map.SizeFactor, map.OffsetX, map.OffsetY);
         IceLogging.Debug($"Current map: {map.RowId} {territoryId} | {map.PlaceName.Value.Name} | {pos.X} {pos.Y} | {x} {y} | {radius} | {tooltip}");
 

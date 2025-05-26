@@ -14,7 +14,7 @@ namespace ICE.Scheduler.Handlers
                 {
                     WasChanged = false;
                     Unlock();
-                    IceLogging.Debug($"YesAlready unlocked", true);
+                    IceLogging.Debug($"YesAlready unlocked");
                 }
             }
             else
@@ -23,7 +23,7 @@ namespace ICE.Scheduler.Handlers
                 {
                     WasChanged = true;
                     Lock();
-                    IceLogging.Debug($"YesAlready locked", true);
+                    IceLogging.Debug($"YesAlready locked");
                 }
             }
         }

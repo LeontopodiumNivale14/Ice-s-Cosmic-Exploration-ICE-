@@ -21,7 +21,7 @@ namespace ICE.Scheduler.Tasks
                 return;
             }
 
-            IceLogging.Debug($"[Score Checker] Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}", true);
+            IceLogging.Debug($"Current Scoring Mission Id: {CosmicHelper.CurrentLunarMission}");
             var currentMission = C.Missions.Single(x => x.Id == CosmicHelper.CurrentLunarMission);
             var (currentScore, bronzeScore, silverScore, goldScore) = MissionHandler.GetCurrentScores();
             bool enoughMain = MissionHandler.HaveEnoughMain().Value;
@@ -43,7 +43,7 @@ namespace ICE.Scheduler.Tasks
                         targetLevel = 2;
                     else if (currentMission.TurnInASAP)
                         targetLevel = 1;
-                    IceLogging.Debug($"[Score Checker] Current Score: {currentScore} | Bronze Goal: {bronzeScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel} | Abort State: {SchedulerMain.State.HasFlag(IceState.AbortInProgress)}", true);
+                    IceLogging.Debug($"Current Score: {currentScore} | Bronze Goal: {bronzeScore} | Silver Goal: {silverScore} | Gold Goal: {goldScore} | Target Level: {targetLevel} | Abort State: {SchedulerMain.State.HasFlag(IceState.AbortInProgress)}");
 
                     if (targetLevel == 3)
                     {
@@ -51,7 +51,7 @@ namespace ICE.Scheduler.Tasks
                         (SchedulerMain.State.HasFlag(IceState.AbortInProgress) && currentMission.TurnInSilver && currentScore > silverScore) ||
                         (SchedulerMain.State.HasFlag(IceState.AbortInProgress) && currentMission.TurnInASAP))
                         {
-                            IceLogging.Debug("[Score Checker] Gold was enabled, and you also meet gold threshold.", true);
+                            IceLogging.Debug("Gold was enabled, and you also meet gold threshold.");
                             MissionHandler.TurnIn(z);
                             return;
                         }
@@ -61,7 +61,7 @@ namespace ICE.Scheduler.Tasks
                         if (currentScore >= silverScore ||
                         (SchedulerMain.State.HasFlag(IceState.AbortInProgress) && currentMission.TurnInASAP))
                         {
-                            IceLogging.Debug("[Score Checker] Silver was enabled, and you also meet silver threshold.", true);
+                            IceLogging.Debug("Silver was enabled, and you also meet silver threshold.");
                             MissionHandler.TurnIn(z);
                             return;
                         }
@@ -70,7 +70,7 @@ namespace ICE.Scheduler.Tasks
                     {
                         if (currentScore >= bronzeScore || bronzeScore == 0)
                         {
-                            IceLogging.Debug("[Score Checker] Turnin Asap was enabled, and true. Firing off", true);
+                            IceLogging.Debug("Turnin Asap was enabled, and true. Firing off");
                             MissionHandler.TurnIn(z);
                             return;
                         }
@@ -85,7 +85,7 @@ namespace ICE.Scheduler.Tasks
                     {
                         var (craft, gather) = MissionHandler.HaveEnoughMainDual();
                         PlayerHelper.GetItemCount(48233, out int count);
-                        IceLogging.Debug($"[Score Checker] [Dual class] Craft Enough: {craft} | Gather Enough: {gather} | Cosmics: {count}", true);
+                        IceLogging.Debug($"[Dual class] Craft Enough: {craft} | Gather Enough: {gather} | Cosmics: {count}");
                         if (gather) // Gathering complete
                         {
                             SchedulerMain.State &= ~IceState.Gather;

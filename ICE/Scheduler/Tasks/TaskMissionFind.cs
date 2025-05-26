@@ -52,12 +52,7 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (hud.CosmoCredit >= C.CosmoCreditsCap)
                     {
-                        IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits");
-                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                        {
-                            Message = $"[ICE] Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits.",
-                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                        });
+                        DuoLog.Information($"Stopping the plugin as you have {hud.CosmoCredit} Cosmocredits.");
                         SchedulerMain.DisablePlugin();
                         return;
                     }
@@ -70,12 +65,7 @@ namespace ICE.Scheduler.Tasks
                 {
                     if (hud.LunarCredit >= C.LunarCreditsCap)
                     {
-                        IceLogging.Debug($"[SchedulerMain] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
-                        Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                        {
-                            Message = $"[ICE] Stopping the plugin as you have {hud.LunarCredit} Lunar Credits",
-                            Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                        });
+                        DuoLog.Information($"Stopping the plugin as you have {hud.LunarCredit} Lunar Credits");
                         SchedulerMain.DisablePlugin();
                         return;
                     }
@@ -84,8 +74,8 @@ namespace ICE.Scheduler.Tasks
 
             if (Player.Level >= C.TargetLevel && C.StopWhenLevel)
             {
-                SchedulerMain.StopBeforeGrab = true;
-                IceLogging.Debug($"StopWhenLevel: Stopped at target level {Player.Level}");
+                DuoLog.Information($"Stopping the plugin as you have reached level {C.TargetLevel}");
+                SchedulerMain.DisablePlugin();
             }
             if (SchedulerMain.StopBeforeGrab)
             {
@@ -98,12 +88,7 @@ namespace ICE.Scheduler.Tasks
 
             if (!(HasCritical || HasWeather || HasTimed || HasSequence || HasStandard))
             {
-                IceLogging.Error("[SchedulerMain] No missions available, stopping the plugin");
-                Svc.Chat.Print(new Dalamud.Game.Text.XivChatEntry()
-                {
-                    Message = $"[ICE] No missions enabled for {Svc.ClientState.LocalPlayer?.ClassJob.Value.Name}. Did you forget to set me up?",
-                    Type = Dalamud.Game.Text.XivChatType.ErrorMessage,
-                });
+                DuoLog.Error($"No missions enabled for {Svc.ClientState.LocalPlayer?.ClassJob.Value.Name}. Did you forget to set me up?");
                 SchedulerMain.DisablePlugin();
                 return;
             }
@@ -280,14 +265,14 @@ namespace ICE.Scheduler.Tasks
                             continue;
                         }
 
-                        IceLogging.Debug($"[Critical Mission] Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending", true);
+                        IceLogging.Debug($"Mission Name: {m.Name} | MissionId: {criticalMissionEntry.Id} has been found. Setting value for sending");
                         SelectMission(m);
                         break;
                     }
                 }
 
                 if (MissionId == 0)
-                    IceLogging.Debug("[Critical Mission] No mission was found under weather, continuing on", true);
+                    IceLogging.Debug("No mission was found under weather, continuing on");
                 return true;
             }
             return false;
@@ -333,17 +318,17 @@ namespace ICE.Scheduler.Tasks
 
                         if (weatherMissionEntry == default)
                         {
-                            IceLogging.Debug($"[Weather Mission] Weather mission entry is default. Which means id: {weatherMissionEntry}", true);
+                            IceLogging.Debug($"Weather mission entry is default. Which means id: {weatherMissionEntry}");
                             continue;
                         }
-                        IceLogging.Debug($"[Weather Mission] Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending", true);
+                        IceLogging.Debug($"Mission Name: {m.Name} | MissionId: {weatherMissionEntry.Id} has been found. Setting value for sending");
                         SelectMission(m);
                         break;
                     }
                 }
 
                 if (MissionId == 0)
-                    IceLogging.Debug("[Weather Mission] No mission was found under weather.", true);
+                    IceLogging.Debug("No mission was found under weather.");
                 return true;
             }
             return false;
@@ -360,10 +345,10 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("Selecting Basic Mission"))
             {
-                IceLogging.Debug($"[Basic Mission] Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}", true);
+                IceLogging.Debug($"Mission Name: {SchedulerMain.MissionName} | MissionId: {MissionId}");
                 if (MissionId != 0)
                 {
-                    IceLogging.Debug("[Basic Mission] You already have a mission found, skipping finding a basic mission", true);
+                    IceLogging.Debug("You already have a mission found, skipping finding a basic mission");
                     return true;
                 }
 
@@ -378,14 +363,14 @@ namespace ICE.Scheduler.Tasks
 
                         if (EzThrottler.Throttle("[Reset Mission Finder] Selecting Basic Mission"))
                         {
-                            IceLogging.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending", true);
+                            IceLogging.Debug($"Mission Name: {basicMissionEntry.Name} | MissionId: {basicMissionEntry.Id} has been found. Setting values for sending");
                             SelectMission(m);
                             break;
                         }
                     }
 
                     if (MissionId == 0)
-                        IceLogging.Debug("[Basic Mission] No mission was found under basic missions.", true);
+                        IceLogging.Debug("No mission was found under basic missions.");
                     return true;
                 }
             }
@@ -396,16 +381,16 @@ namespace ICE.Scheduler.Tasks
         {
             if (EzThrottler.Throttle("FindResetMission"))
             {
-                IceLogging.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}", true);
+                IceLogging.Debug($"Mission Name: {SchedulerMain.MissionName} | MissionId {MissionId}");
                 if (MissionId != 0)
                 {
-                    IceLogging.Debug("[Reset Mission Finder] You already have a mission found, skipping finding a basic mission.", true);
+                    IceLogging.Debug("You already have a mission found, skipping finding a basic mission.");
                     return true;
                 }
 
                 if (TryGetAddonMaster<WKSMission>("WKSMission", out var x) && x.IsAddonReady)
                 {
-                    IceLogging.Debug("[Reset Mission Finder] Found mission was false", true);
+                    IceLogging.Debug("Found mission was false");
                     var currentClassJob = PlayerHelper.GetClassJobId();
 
 
@@ -420,7 +405,7 @@ namespace ICE.Scheduler.Tasks
                                 hud.Mission();
                             }
                         }
-                        IceLogging.Debug("[Reset Mission Finder] Wrong class mission list, Restarting", true);
+                        IceLogging.Debug("Wrong class mission list, Restarting");
                         return false;
                     }
 
@@ -440,7 +425,7 @@ namespace ICE.Scheduler.Tasks
 
                     if (missionRanks.Length == 0)
                     {
-                        IceLogging.Debug("[Reset Mission Finder] No Standard Mission is Selected, nothing to reroll", true);
+                        IceLogging.Debug("No Standard Mission is Selected, nothing to reroll");
                         return true;
                     }
 
@@ -460,16 +445,16 @@ namespace ICE.Scheduler.Tasks
                         if (missionEntry.Value == null)
                             continue;
 
-                        IceLogging.Debug($"[Reset Mission Finder] Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}", true);
+                        IceLogging.Debug($"Mission: {m.Name} | Mission rank: {missionEntry.Value.Rank} | Rank to reset: {rankToReset}");
                         if (missionEntry.Value.Rank == rankToReset)
                         {
-                            IceLogging.Debug($"[Reset Mission Finder] Setting SchedulerMain.MissionName = {m.Name}", true);
+                            IceLogging.Debug($"Setting SchedulerMain.MissionName = {m.Name}");
                             m.Select();
                             SchedulerMain.MissionName = m.Name;
                             MissionId = missionEntry.Key;
                             SchedulerMain.Abandon = true;
 
-                            IceLogging.Debug($"[Reset Mission Finder] Mission Name: {SchedulerMain.MissionName}", true);
+                            IceLogging.Debug($"Mission Name: {SchedulerMain.MissionName}");
 
                             return true;
                         }
@@ -489,7 +474,7 @@ namespace ICE.Scheduler.Tasks
                 if (SchedulerMain.Abandon == false && mission.Attributes.HasFlag(MissionAttributes.Gather) && !mission.Attributes.HasFlag(MissionAttributes.Critical) && distance > mission.Radius)
                 {
                     SchedulerMain.State |= IceState.Waiting;
-                    IceLogging.Debug($"[ICE] Distance to marker: {distance} | Radius: {mission.Radius}", true);
+                    IceLogging.Debug($"Distance to marker: {distance} | Radius: {mission.Radius}");
                     P.Navmesh.PathfindAndMoveTo(GatheringUtil.MoonNodeInfoList.Where(x => x.NodeSet == mission.NodeSet).OrderBy(x => PlayerHelper.GetDistanceToPlayer(x.Position)).First().LandZone, false);
                     return true;
                 }
@@ -503,7 +488,7 @@ namespace ICE.Scheduler.Tasks
                     string[] commenceStrings = ["選択したミッションを開始します。よろしいですか？", "Commence selected mission?", "Ausgewählte Mission wird gestartet.Fortfahren?", "Commencer la mission sélectionnée ?"];
                     if (commenceStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
-                        IceLogging.Debug($"[Grabbing Mission] Expected Commence window: {select.Text}", true);
+                        IceLogging.Debug($"Expected Commence window: {select.Text}");
                         select.Yes();
                     }
                     else

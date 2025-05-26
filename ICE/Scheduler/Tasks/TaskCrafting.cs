@@ -43,7 +43,7 @@ namespace ICE.Scheduler.Tasks
 
             if (currentScore >= goldScore)
             {
-                IceLogging.Debug("[Crafting] We reached gold, switching to Score Check.", true);
+                IceLogging.Debug("We reached gold, switching to Score Check.");
                 SchedulerMain.State |= IceState.ScoringMission;
                 return;
             }
@@ -92,17 +92,17 @@ namespace ICE.Scheduler.Tasks
 
                     var mainItemName = ExcelHelper.ItemSheet.GetRow(itemId).Name.ToString();
 
-                    IceLogging.Info($"[Crafting] RecipeID: {main.Key}", true);
-                    //IceLogging.Info($"[Crafting] ItemID: {itemId}", true);
+                    IceLogging.Info($"RecipeID: {main.Key}");
+                    //IceLogging.Info($"ItemID: {itemId}");
 
                     if ((currentSubItemAmount / (subItemNeed / mainNeed)) == 0) // This should OOM only if not enough to craft a single Main
                     {
-                        IceLogging.Info($"[Crafting] [OOM] Not enough to craft main item");
+                        IceLogging.Info($"[OOM] Not enough to craft main item");
                         OOMMain = true; // All current 3x Main items share Sub items
                     }
 
-                    IceLogging.Debug($"[Crafting] Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}", true);
-                    IceLogging.Debug($"[Crafting] Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}", true);
+                    IceLogging.Debug($"Main ItemID: {itemId} [{mainItemName}] | Current Amount: {currentAmount} | RecipeId {main.Key}");
+                    IceLogging.Debug($"Required Items for Recipe: ItemID: {subItem} | Currently have: {currentSubItemAmount} | Amount Needed [Base]: {subItemNeed}");
 
                     // Increase how many crafts we want to have made if needed so we can reach Score Checker goals.
                     subItemNeed = subItemNeed * CraftMultipleMissionItems;
@@ -114,13 +114,13 @@ namespace ICE.Scheduler.Tasks
 
                         if (currentSubItemAmount >= subItemNeed)
                         {
-                            IceLogging.Debug($"[Crafting] Pre-crafts present.", true);
+                            IceLogging.Debug($"Pre-crafts present.");
                             int craftAmount = mainNeed - currentAmount;
                             itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                         }
                         else
                         {
-                            IceLogging.Debug($"[Crafting] Pre-crafts required.", true);
+                            IceLogging.Debug($"Pre-crafts required.");
                             int craftAmount = mainNeed - currentAmount;
                             itemsToCraft.Add(main.Key, new(craftAmount, mainNeed));
                             needPreCraft = true;
@@ -137,7 +137,7 @@ namespace ICE.Scheduler.Tasks
                     }
                     else
                     {
-                        //IceLogging.Debug($"[Crafting] You need pre-craft items. Starting the process of finding pre-crafts", true);
+                        //IceLogging.Debug($"You need pre-craft items. Starting the process of finding pre-crafts");
                         foreach (var pre in preCrafts)
                         {
                             var itemId = ExcelHelper.RecipeSheet.GetRow(pre.Key).ItemResult.Value.RowId;
@@ -145,13 +145,13 @@ namespace ICE.Scheduler.Tasks
                             {
 
                                 var PreCraftItemName = ExcelHelper.ItemSheet.GetRow(itemId).Name.ToString();
-                                IceLogging.Debug($"[Crafting] Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.", true);
-                                IceLogging.Debug($"[Crafting] Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}", true);
+                                IceLogging.Debug($"Checking Pre-crafts to see if {itemId} [{PreCraftItemName}] has enough.");
+                                IceLogging.Debug($"Item Amount: {currentAmount} | Goal Amount: {pre.Value} | RecipeId: {pre.Key}");
                                 var goalAmount = pre.Value;
 
                                 if (currentAmount < goalAmount)
                                 {
-                                    IceLogging.Debug($"[Crafting] Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}", true);
+                                    IceLogging.Debug($"Found an item that needs to be crafted: {itemId} | Item Name: {PreCraftItemName}");
                                     int craftAmount = goalAmount - currentAmount;
                                     preItemsToCraft.Add(pre.Key, new(craftAmount, goalAmount));
                                 }
@@ -179,7 +179,7 @@ namespace ICE.Scheduler.Tasks
 
                 if (preItemsToCraft.Count > 0)
                 {
-                    IceLogging.Debug("[Crafting] Queuing up pre-craft items", true);
+                    IceLogging.Debug("Queuing up pre-craft items");
                     foreach (var craft in preItemsToCraft)
                     {
                         EnqueueCraft(craft);
@@ -188,7 +188,7 @@ namespace ICE.Scheduler.Tasks
 
                 if (itemsToCraft.Count > 0)
                 {
-                    IceLogging.Debug("[Crafting] Queuing up main craft items", true);
+                    IceLogging.Debug("Queuing up main craft items");
                     foreach (var craft in itemsToCraft)
                     {
                         EnqueueCraft(craft);
@@ -202,7 +202,7 @@ namespace ICE.Scheduler.Tasks
                         if (EzThrottler.Throttle("Manual Synthesis"))
                             if (GenericHelpers.TryGetAddonMaster<WKSRecipeNotebook>("WKSRecipeNotebook", out var recipe) && recipe.IsAddonReady)
                             {
-                                IceLogging.Debug("[Crafting] Starting manual synthesis of Critical Mission item", true);
+                                IceLogging.Debug("Starting manual synthesis of Critical Mission item");
                                 recipe.Synthesize();
                             }
                     });
@@ -213,7 +213,7 @@ namespace ICE.Scheduler.Tasks
                 P.TaskManager.Enqueue(() => Svc.Condition[ConditionFlag.NormalConditions] || (Svc.Condition[ConditionFlag.Crafting] && Svc.Condition[ConditionFlag.PreparingToCraft]));
                 P.TaskManager.Enqueue(() =>
                 {
-                    IceLogging.Debug("Check score and turn in cause crafting is done.", true);
+                    IceLogging.Debug("Check score and turn in cause crafting is done.");
                     SchedulerMain.State |= IceState.ScoringMission;
                 }, "Check score and turn in if complete");
 
@@ -224,7 +224,7 @@ namespace ICE.Scheduler.Tasks
         private static void EnqueueCraft(KeyValuePair<ushort, Tuple<int, int>> craft)
         {
             var item = ExcelHelper.ItemSheet.GetRow(ExcelHelper.RecipeSheet.GetRow(craft.Key).ItemResult.RowId);
-            IceLogging.Debug($"[Crafting] Adding craft {craft} | {item.Name}", true);
+            IceLogging.Debug($"Adding craft {craft} | {item.Name}");
             P.TaskManager.Enqueue(() => !P.Artisan.IsBusy());
             P.TaskManager.Enqueue(() => Craft(craft.Key, craft.Value.Item1, item), "PreCraft item");
             P.TaskManager.EnqueueDelay(2000); // Give artisan a moment before we track it.
@@ -251,7 +251,7 @@ namespace ICE.Scheduler.Tasks
                             {
                                 if (i.Name.Contains(item.Name.ToString()))
                                 {
-                                    IceLogging.Debug($"[Craft failsafe] Selecting item: {i.Name}", true);
+                                    IceLogging.Debug($"Selecting item: {i.Name}");
                                     i.Select();
                                 }
                                 else
@@ -265,7 +265,7 @@ namespace ICE.Scheduler.Tasks
             }
 #endif
 
-            IceLogging.Debug($"[Crafting] Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}", true);
+            IceLogging.Debug($"Telling Artisan to use recipe: {id} | {craftAmount} for {item.Name}");
             P.Artisan.CraftItem(id, craftAmount);
         }
 
@@ -277,7 +277,7 @@ namespace ICE.Scheduler.Tasks
                 {
                     if ((Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.PreparingToCraft]) && !P.Artisan.IsBusy())
                     {
-                        IceLogging.Debug("[Crafting] [Wait] We seem to no longer be crafting", true);
+                        IceLogging.Debug("We seem to no longer be crafting");
                         SchedulerMain.State |= IceState.ScoringMission;
                         SchedulerMain.State &= ~IceState.Waiting;
                         return true;
@@ -305,7 +305,7 @@ namespace ICE.Scheduler.Tasks
 
                 if (currentScore >= goldScore && enoughMain.Value)
                 {
-                    IceLogging.Debug("[Crafting] [Wait] Gold wanted. Gold reached.", true);
+                    IceLogging.Debug("Gold wanted. Gold reached.");
                     SchedulerMain.State |= IceState.ScoringMission;
                     SchedulerMain.State &= ~IceState.Waiting;
                     P.Artisan.SetEnduranceStatus(false);
@@ -313,7 +313,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 else if (targetLevel == 2 && currentScore >= silverScore && enoughMain.Value)
                 {
-                    IceLogging.Debug("[Crafting] [Wait] Silver wanted. Silver reached.", true);
+                    IceLogging.Debug("Silver wanted. Silver reached.");
                     SchedulerMain.State |= IceState.ScoringMission;
                     SchedulerMain.State &= ~IceState.Waiting;
                     P.Artisan.SetEnduranceStatus(false);
@@ -321,7 +321,7 @@ namespace ICE.Scheduler.Tasks
                 }
                 else if (targetLevel == 1 && (currentScore >= bronzeScore || bronzeScore == 0) && enoughMain.Value)
                 {
-                    IceLogging.Debug("[Crafting] [Wait] Bronze wanted. Turning in.", true);
+                    IceLogging.Debug("Bronze wanted. Turning in.");
                     SchedulerMain.State |= IceState.ScoringMission;
                     SchedulerMain.State &= ~IceState.Waiting;
                     P.Artisan.SetEnduranceStatus(false);
@@ -330,7 +330,7 @@ namespace ICE.Scheduler.Tasks
 
                 if ((Svc.Condition[ConditionFlag.PreparingToCraft] || Svc.Condition[ConditionFlag.NormalConditions]) && !P.Artisan.IsBusy())
                 {
-                    IceLogging.Debug("[Crafting] [Wait] We seem to no longer be crafting", true);
+                    IceLogging.Debug("We seem to no longer be crafting");
                     SchedulerMain.State |= IceState.ScoringMission;
                     SchedulerMain.State &= ~IceState.Waiting;
                     return true;

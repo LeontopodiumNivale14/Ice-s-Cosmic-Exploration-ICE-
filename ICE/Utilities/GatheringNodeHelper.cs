@@ -182,7 +182,7 @@ public class GatheringPathfinder
             return [];
         }
 
-        List<GathNodeInfo> allNodes = nodes.ToList();
+        List<GathNodeInfo> allNodes = [.. nodes];
         if (allNodes.Count == 1)
         {
             return [allNodes.First()];

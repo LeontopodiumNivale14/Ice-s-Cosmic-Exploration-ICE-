@@ -576,7 +576,7 @@ internal class DebugWindow : Window
                 int _x = MapInfo.GetRow((uint)TableRow).Unknown1.ToInt() - 1024;
                 int _y = MapInfo.GetRow((uint)TableRow).Unknown2.ToInt() - 1024;
                 int _radius = MapInfo.GetRow((uint)TableRow).Unknown3.ToInt();
-                IceLogging.Debug($"X: {_x} Y: {_y} Radius: {_radius}", true);
+                IceLogging.Debug($"X: {_x} Y: {_y} Radius: {_radius}");
 
                 Utils.SetGatheringRing(1237, _x, _y, _radius);
             }
@@ -593,7 +593,7 @@ internal class DebugWindow : Window
                 var agent = AgentMap.Instance();
                 int _x = posX - 1024;
                 int _y = posY - 1024;
-                IceLogging.Debug($"X: {_x} Y: {_y}", true);
+                IceLogging.Debug($"X: {_x} Y: {_y}");
 
                 Utils.SetGatheringRing(agent->CurrentTerritoryId, _x, _y, posRadius);
             }

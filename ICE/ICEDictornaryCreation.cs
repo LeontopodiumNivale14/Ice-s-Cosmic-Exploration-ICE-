@@ -114,7 +114,7 @@ public sealed partial class ICE
                     var item1Id = item1RecipeRow.ItemResult.RowId;
                     var item1Name = ItemSheet.GetRow(item1Id).Name.ToString();
                     var craftingType = item1RecipeRow.CraftType.Value.RowId;
-                    IceLogging.Debug($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id} | {item1Name}", true);
+                    IceLogging.Verbose($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id} | {item1Name}");
                     var item1RecipeId = item1RecipeRow.RowId;
                     MainItems.Add(((ushort)item1RecipeId), item1Amount);
                 }
@@ -129,13 +129,13 @@ public sealed partial class ICE
                                                                 e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[2].Value.RowId)
                                                     .First();
                     var craftingType = item1RecipeRow.CraftType.Value.RowId;
-                    IceLogging.Debug($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id} | {item1Name}", true);
+                    IceLogging.Verbose($"Recipe Row ID: {item1RecipeRow.RowId} | for item: {item1Id} | {item1Name}");
                     for (var i = 0; i <= 3; i++)
                     {
                         var subitem = item1RecipeRow.Ingredient[i].Value.RowId;
                         if (subitem != 0)
                         {
-                            IceLogging.Debug($"subItemId: {subitem} slot [{i}]", true);
+                            IceLogging.Verbose($"subItemId: {subitem} slot [{i}]");
                             var subitemRecipe = RecipeSheet.Where(x => x.ItemResult.RowId == subitem)
                                                            .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[0].Value.RowId ||
                                                                   e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[1].Value.RowId ||
@@ -164,13 +164,13 @@ public sealed partial class ICE
                                                            e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[1].Value.RowId ||
                                                            e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[2].Value.RowId)
                                                     .First();
-                    IceLogging.Debug($"Recipe Row ID: {item2RecipeRow.RowId} | for item: {item2Id} | {item2Name}", true);
+                    IceLogging.Verbose($"Recipe Row ID: {item2RecipeRow.RowId} | for item: {item2Id} | {item2Name}");
                     for (var i = 0; i <= 3; i++)
                     {
                         var subitem = item2RecipeRow.Ingredient[i].Value.RowId;
                         if (subitem != 0)
                         {
-                            IceLogging.Debug($"subItemId: {subitem} slot [{i}]", true);
+                            IceLogging.Verbose($"subItemId: {subitem} slot [{i}]");
                             var subitemRecipe = RecipeSheet.Where(e => e.ItemResult.RowId == item2Id)
                                                            .Where(e => e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[0].Value.RowId ||
                                                                   e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[1].Value.RowId ||
@@ -199,13 +199,13 @@ public sealed partial class ICE
                                                            e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[1].Value.RowId ||
                                                            e.RowId == MoonRecipeSheet.GetRow(RecipeId).Recipe[2].Value.RowId)
                                                     .First();
-                    IceLogging.Debug($"Recipe Row ID: {item3RecipeRow.RowId} | for item: {item3Id} | {item3Name}", true);
+                    IceLogging.Verbose($"Recipe Row ID: {item3RecipeRow.RowId} | for item: {item3Id} | {item3Name}");
                     for (var i = 0; i <= 3; i++)
                     {
                         var subitem = item3RecipeRow.Ingredient[i].Value.RowId;
                         if (subitem != 0)
                         {
-                            IceLogging.Debug($"subItemId: {subitem} slot [{i}]", true);
+                            IceLogging.Verbose($"subItemId: {subitem} slot [{i}]");
                             var subitemRecipe = RecipeSheet.FirstOrDefault(x => x.ItemResult.RowId == subitem);
                             if (subitemRecipe.RowId != 0)
                             {

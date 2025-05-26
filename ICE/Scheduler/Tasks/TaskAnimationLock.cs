@@ -8,7 +8,7 @@ namespace ICE.Scheduler.Tasks
         {   
             if (Svc.Condition[ConditionFlag.NormalConditions] || Svc.Condition[ConditionFlag.ExecutingCraftingAction] || AddonHelper.IsAddonActive("RecipeNote") || AddonHelper.IsAddonActive("WKSRecipeNotebook"))
             {
-                IceLogging.Info("[Animation Lock] [Wait] We were in Animation Lock fix state and seem to be fixed. Reseting.", true);
+                IceLogging.Info("We were in Animation Lock fix state and seem to be fixed. Reseting.");
                 SchedulerMain.State = IceState.GrabMission;
                 SchedulerMain.PossiblyStuck = 0;
                 SchedulerMain.AnimationLockAbandonState = false;

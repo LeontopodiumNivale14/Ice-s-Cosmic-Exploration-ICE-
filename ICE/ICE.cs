@@ -74,7 +74,7 @@ public sealed partial class ICE : IDalamudPlugin
         Init();
         Svc.Framework.Update += Tick;
 
-        TaskManager = new(new(showDebug: true));
+        TaskManager = new(new(showDebug: false));
         Svc.PluginInterface.UiBuilder.Draw += windowSystem.Draw;
         Svc.PluginInterface.UiBuilder.OpenMainUi += () =>
         {

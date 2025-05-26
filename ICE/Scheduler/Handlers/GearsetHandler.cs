@@ -29,7 +29,7 @@ namespace ICE.Scheduler.Handlers
                     }
 
                     var result = gearsets->EquipGearset(gs.Id);
-                    Svc.Log.Debug($"Tried to equip gearset {gs.Id} for {job}, result={result}, flags={gs.Flags}");
+                    IceLogging.Debug($"Tried to equip gearset {gs.Id} for {job}, result={result}, flags={gs.Flags}");
                     return;
                 }
             }

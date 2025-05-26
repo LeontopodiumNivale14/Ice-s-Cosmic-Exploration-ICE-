@@ -204,7 +204,7 @@ namespace ICE.Scheduler.Tasks
                                 {
                                     if ((!hasAllItems && item.ItemID == itemToGather) || (hasAllItems && item.ItemID != 0))
                                     {
-                                        IceLogging.Debug($"[Condition F] Mission is aiming to gather: {itemToGather}", true);
+                                        IceLogging.Debug($"[Condition F] Mission is aiming to gather: {itemToGather}");
                                         if (ApplyGatheringBuffs(item, gBuffs, missingDur, Boon1, Boon2, Tidings, Yield1, Yield2, IntegInc, BonusInteg, BYieldII, gather1More))
                                         {
                                             return;
@@ -212,7 +212,7 @@ namespace ICE.Scheduler.Tasks
                                         else
                                         {
                                             IceLogging.Info($"HasAllItems: {hasAllItems} \n" +
-                                                $"Found Item: {item.ItemID} | {item.ItemName}", true);
+                                                $"Found Item: {item.ItemID} | {item.ItemName}");
                                             if (EzThrottler.Throttle($"Gathering: {item.ItemName}"))
                                             {
                                                 IceLogging.Info($"Telling it to item: {item.ItemName}");
@@ -277,9 +277,9 @@ namespace ICE.Scheduler.Tasks
             {
                 if (condition())
                 {
-                    IceLogging.Debug("[ICE] Applying Buff: " + debugMessage, true);
                     if (EzThrottler.Throttle("Gather Buffs"))
                     {
+                        IceLogging.Debug("Applying Buff: " + debugMessage);
                         GatherBuffs(actionId);
                     }
                     return true;
