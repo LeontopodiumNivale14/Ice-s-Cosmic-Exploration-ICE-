@@ -82,6 +82,17 @@ namespace ICE.Scheduler.Tasks
                 }
             }
 
+            if (C.StopOnceHitCosmicScore)
+            {
+                var (classScore, _, _, _) = MissionHandler.GetCosmicClassScores();
+                if (classScore >= C.CosmicScoreCap)
+                {
+                    DuoLog.Information($"Stopping the plugin as you have {classScore} Cosmic Score");
+                    SchedulerMain.DisablePlugin();
+                    return;
+                }
+            }
+
             if (Player.Level >= C.TargetLevel && C.StopWhenLevel)
             {
                 SchedulerMain.StopBeforeGrab = true;
@@ -549,7 +560,7 @@ namespace ICE.Scheduler.Tasks
             {
                 if (TryGetAddonMaster<SelectYesno>("SelectYesno", out var select) && select.IsAddonReady)
                 {
-                    string[] abandonStrings = ["受注中のミッションを破棄します。よろしいですか？", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûr de vouloir abandonner la mission en cours ?"];
+                    string[] abandonStrings = ["受注中のミッションを破棄します。", "Abandon mission?", "Aktuelle Mission abbrechen?", "Êtes-vous sûre de vouloir abandonner la mission en cours ?"];
                     if (abandonStrings.Any(select.Text.Contains) || !C.RejectUnknownYesno)
                     {
                         IceLogging.Debug($"[Abandoning Mission] Expected Abandon window: {select.Text}");

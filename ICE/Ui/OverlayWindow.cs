@@ -1,11 +1,7 @@
 using System.Globalization;
 using Dalamud.Game.Text;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-using ICE.Utilities.Cosmic;
 using Lumina.Excel.Sheets;
 
 namespace ICE.Ui
@@ -133,43 +129,17 @@ namespace ICE.Ui
         {
             try
             {
-                unsafe
+                var (classScore, cappedClassScore, totalScores, classId) = MissionHandler.GetCosmicClassScores();
+
+                ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
+                    $"{Svc.Data.GetExcelSheet<ClassJob>().GetRow(classId).Abbreviation}: {(float)cappedClassScore / 500_000:P} ({classScore:N0})"));
+                ImGui.SameLine();
+                using (ImRaii.Disabled())
                 {
-                    var wksManager = WKSManager.Instance();
-                    var currentMissionId = wksManager->CurrentMissionUnitRowId;
-
-                    uint? classId;
-                    if (currentMissionId > 0 &&
-                        CosmicHelper.MissionInfoDict.TryGetValue(currentMissionId, out var missionInfo))
-                        classId = missionInfo.JobId;
-                    else
-                        classId = Svc.ClientState.LocalPlayer?.ClassJob.RowId;
-
-                    if (classId is >= 8 and <= 18)
-                    {
-                        var wksManagerEx = (WKSManagerEx*)wksManager;
-                        var scores =
-                            MemoryMarshal.CreateSpan(
-                                ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
-
-                        int classScore = scores[(int)classId - 8];
-                        var cappedClassScore = Math.Min(500_000, classScore);
-
-                        int totalScores = 0;
-                        for (int i = 0; i < scores.Length; ++i)
-                            totalScores += Math.Min(500_000, scores[i]);
-
-                        ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
-                            $"{Svc.Data.GetExcelSheet<ClassJob>().GetRow(classId.Value).Abbreviation}: {(float)cappedClassScore / 500_000:P} ({classScore:N0})"));
-                        ImGui.SameLine();
-                        using (ImRaii.Disabled())
-                        {
-                            ImGui.TextUnformatted("--");
-                            ImGui.SameLine();
-                            ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
-                                $"All: {(float)totalScores / 11 / 500_000:P} ({SeIconChar.CrossWorld.ToIconChar()} {11 * 500_000 - totalScores:N0})"));
-                        }
-                    }
+                    ImGui.TextUnformatted("--");
+                    ImGui.SameLine();
+                    ImGui.TextUnformatted(string.Create(CultureInfo.InvariantCulture,
+                        $"All: {(float)totalScores / 11 / 500_000:P} ({SeIconChar.CrossWorld.ToIconChar()} {11 * 500_000 - totalScores:N0})"));
                 }
             }
             catch

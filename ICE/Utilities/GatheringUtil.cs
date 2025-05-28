@@ -172,8 +172,8 @@ public static unsafe class GatheringUtil
         { new Vector2(-131, -365), 22 },
         { new Vector2(-270, 140), 23 },
         // { new Vector2(566, -908), 24 },
-        // { new Vector2(188, -201), 25 },
-        // { new Vector2(748, 101), 26 },
+        { new Vector2(188, -201), 25 },
+        { new Vector2(748, 101), 26 },
     };
 
     public class GathNodeInfo
@@ -427,118 +427,116 @@ public static unsafe class GatheringUtil
             NodeSet = 24
         },
 
-        
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 25
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 25
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 25
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 25
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 25
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 25
-        },
-
-        
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 26
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 26
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 26
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 26
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 26
-        },
-        new GathNodeInfo
-        {
-            ZoneId = 1237,
-            NodeId = ,
-            Position = new Vector3 (),
-            LandZone = new Vector3 (),
-            GatheringType = 2,
-            NodeSet = 26
-        },
         */
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35225,
+            Position = new Vector3(178.5146f, 28.33517f, -234.279f),
+            LandZone = new Vector3(178.5146f, 28.33517f, -234.279f),
+            GatheringType = 3,
+            NodeSet = 25
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35226,
+            Position = new Vector3(197.6805f, 31.65541f, -243.8829f),
+            LandZone = new Vector3(197.6805f, 31.65541f, -243.8829f),
+            GatheringType = 3,
+            NodeSet = 25
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35230,
+            Position = new Vector3(144.964f, 22.65566f, -198.4546f),
+            LandZone = new Vector3(144.964f, 22.65566f, -198.4546f),
+            GatheringType = 3,
+            NodeSet = 25
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35229,
+            Position = new Vector3(167.5034f, 24.00558f, -186.3173f),
+            LandZone = new Vector3(167.5034f, 24.00558f, -186.3173f),
+            GatheringType = 3,
+            NodeSet = 25
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35228,
+            Position = new Vector3(230.1051f, 26.79718f, -167.2313f),
+            LandZone = new Vector3(230.1051f, 26.79718f, -167.2313f),
+            GatheringType = 3,
+            NodeSet = 25
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35227,
+            Position = new Vector3(234.4044f, 27.3815f, -175.0399f),
+            LandZone = new Vector3(234.4044f, 27.3815f, -175.0399f),
+            GatheringType = 3,
+            NodeSet = 25
+        },
+        
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35213,
+            Position = new Vector3(778.8542f, 58.51204f, 90.23239f),
+            LandZone = new Vector3(778.8542f, 58.51204f, 90.23239f),
+            GatheringType = 3,
+            NodeSet = 26
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35214,
+            Position = new Vector3(785.6716f, 59.13748f, 69.10181f),
+            LandZone = new Vector3(785.6716f, 59.13748f, 69.10181f),
+            GatheringType = 3,
+            NodeSet = 26
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35215,
+            Position = new Vector3(724.3608f, 56.97183f, 149.7798f),
+            LandZone = new Vector3(724.3608f, 56.97183f, 149.7798f),
+            GatheringType = 3,
+            NodeSet = 26
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35216,
+            Position = new Vector3(733.382f, 57.84801f, 152.2305f),
+            LandZone = new Vector3(733.382f, 57.84801f, 152.2305f),
+            GatheringType = 3,
+            NodeSet = 26
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35217,
+            Position = new Vector3(710.4752f, 53.412f, 49.43619f),
+            LandZone = new Vector3(710.4752f, 53.412f, 49.43619f),
+            GatheringType = 3,
+            NodeSet = 26
+        },
+        new GathNodeInfo
+        {
+            ZoneId = 1237,
+            NodeId = 35218,
+            Position = new Vector3(700.0176f, 52.94641f, 56.65482f),
+            LandZone = new Vector3(700.0176f, 52.94641f, 56.65482f),
+            GatheringType = 3,
+            NodeSet = 26
+        },
 
         #endregion
 

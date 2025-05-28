@@ -161,7 +161,7 @@ namespace ICE.Scheduler
                     State = Start;
                     return;
                 }
-                if (AddonHelper.GetNodeText("WKSMissionInfomation", 23).Contains("00:00"))
+                if (MissionHandler.IsMissionTimedOut())
                     State |= AbortInProgress;
                 TaskMissionFind.UpdateStateFlags();
                 if (State.HasFlag(Craft) && P.Artisan.IsBusy())
