@@ -1394,10 +1394,7 @@ namespace ICE.Ui
                 float windowSize = ImGui.GetWindowSize().X - 20;
                 Vector2 size = new Vector2(windowSize, 10);
 
-                var wksManagerEx = (WKSManagerEx*)wksManager;
-                var scores =
-                    MemoryMarshal.CreateSpan(
-                        ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
+                var scores = wksManager->Scores;
 
                 int classScore = scores[(int)selectedJob - 8];
                 var cappedClassScore = Math.Min(500_000, classScore);
@@ -1475,10 +1472,7 @@ namespace ICE.Ui
 
                     if (classId is >= 8 and <= 18)
                     {
-                        var wksManagerEx = (WKSManagerEx*)wksManager;
-                        var scores =
-                            MemoryMarshal.CreateSpan(
-                                ref Unsafe.As<FixedSizeArray11<int>, int>(ref wksManagerEx->_scores), 11);
+                        var scores = wksManager->Scores;
 
                         int classScore = scores[(int)classId - 8];
                         var cappedClassScore = Math.Min(500_000, classScore);
