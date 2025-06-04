@@ -1,17 +1,23 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+﻿using CSGameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
-using ECommons.ExcelServices;
 using ECommons.GameHelpers;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Lumina.Excel.Sheets;
 
 namespace ICE.Utilities;
 
 public class PlayerHelper
 {
-
-    public static uint? GetClassJobId() => Svc.ClientState.LocalPlayer?.ClassJob.RowId ;
+    private unsafe static CSGameObject* CSPlayerObject
+    {
+        get
+        {
+            var localPlayer = Svc.ClientState.LocalPlayer;
+            return localPlayer != null ? (CSGameObject*)localPlayer.Address : null;
+        }
+    }
+    public static uint? GetClassJobId() => Svc.ClientState.LocalPlayer?.ClassJob.RowId;
     public static bool UsingSupportedJob()
     {
         var jobId = GetClassJobId();
@@ -77,6 +83,21 @@ public class PlayerHelper
 
     internal static unsafe float GetDistanceToPlayer(Vector3 v3) => Vector3.Distance(v3, Player.GameObject->Position);
     internal static unsafe float GetDistanceToPlayer(IGameObject gameObject) => GetDistanceToPlayer(gameObject.Position);
+    internal unsafe static void SetRotation(float angle)
+    {
+        if (CSPlayerObject != null)
+        {
+            CSPlayerObject->SetRotation(angle);
+        }
+    }
+    public static unsafe bool IsCastAvailable()
+    {
+        if (ActionManager.Instance()->GetActionStatus(ActionType.Action, 289) == 0)
+        {
+            return true;
+        }
+        return false;
+    }
 
     public static unsafe bool GetItemCount(int itemID, out int count, bool includeHq = true, bool includeNq = true)
     {

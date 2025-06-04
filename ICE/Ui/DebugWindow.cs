@@ -37,6 +37,7 @@ internal class DebugWindow : Window
     private int posX = 0;
     private int posY = 0;
     private int posRadius = 0;
+    private float wantedRotation = 0;
 
     private string CraftingTableSearchText = "";
     private string RecipeTableSearchText = "";
@@ -51,7 +52,16 @@ internal class DebugWindow : Window
             }
             ImGui.SameLine();
             ImGui.AlignTextToFramePadding();
-            ImGui.Text($"{Player.Position}");
+            Vector4 PositionRot = new(Player.Position, Player.Rotation);
+            ImGui.Text($"{PositionRot}");
+            ImGui.SliderAngle("Wanted Angle", ref wantedRotation);
+            ImGui.SameLine();
+            ImGui.Text(wantedRotation.ToString());
+            ImGui.SameLine();
+            if (ImGui.Button("Set"))
+            {
+                PlayerHelper.SetRotation(wantedRotation);
+            }
             ImGui.Text($"GP: {PlayerHelper.GetGp()}");
 
             ImGui.TreePop();

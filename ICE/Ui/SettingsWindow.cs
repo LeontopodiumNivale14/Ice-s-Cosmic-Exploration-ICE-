@@ -1,5 +1,6 @@
 ﻿using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
+using ECommons.GameHelpers;
 using System.Collections.Generic;
 
 namespace ICE.Ui;
@@ -318,7 +319,28 @@ internal class SettingsWindow : Window
                 ImGui.TreePop();
             }
         }
+        uint neareastMapMarker = CosmicHelper.MissionInfoDict.OrderBy(x => PlayerHelper.GetDistanceToPlayer(new Vector3(x.Value.X, 0, x.Value.Y))).First().Value.MarkerId;
 
+        using (ImRaii.Disabled(!PlayerHelper.IsCastAvailable()))
+        {
+            if (ImGui.Button("Save Fishing Spot"))
+            {
+                C.FishingSpots[neareastMapMarker] = new Vector4(Player.Position, Player.Rotation);
+                C.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Forget this spot"))
+            {
+                C.FishingSpots.Remove(neareastMapMarker);
+                C.Save();
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Forget all spots"))
+        {
+            C.FishingSpots = [];
+            C.Save();
+        }
         ImGui.Dummy(new(0, 5));
 
         ImGui.SetNextItemWidth(200);

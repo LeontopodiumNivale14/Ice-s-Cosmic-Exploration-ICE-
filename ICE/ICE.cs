@@ -1,9 +1,7 @@
 using ECommons.Automation.NeoTaskManager;
 using ECommons.Configuration;
-using ICE.Scheduler;
 using ICE.Ui;
 using ICE.IPC;
-using ICE.Scheduler.Handlers;
 using System.Collections.Generic;
 using static ICE.Utilities.CosmicHelper;
 
@@ -34,6 +32,7 @@ public sealed partial class ICE : IDalamudPlugin
     internal PandoraIPC Pandora;
     internal ArtisanIPC Artisan;
     internal VislandIPC Visland;
+    internal AutoHookIPC AutoHook;
 
     public ICE(IDalamudPluginInterface pi)
     {
@@ -50,6 +49,7 @@ public sealed partial class ICE : IDalamudPlugin
         Pandora = new();
         Artisan = new();
         Visland = new();
+        AutoHook = new();
 
         // all the windows
         windowSystem = new();

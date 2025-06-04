@@ -1,6 +1,7 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Memory;
 using ECommons.GameHelpers;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
 using static ECommons.UIHelpers.AddonMasterImplementations.AddonMaster;
 
@@ -286,6 +287,10 @@ internal static class MissionHandler
             IceLogging.Info("Player is gathering, trying to fix");
             g.Addon->FireCallbackInt(-1);
             return false;
+        }
+        else if (Svc.Condition[ConditionFlag.Gathering] && Player.Job == Job.FSH)
+        {
+            ActionManager.Instance()->UseAction(ActionType.Action, 299); // Quit
         }
         return true;
     }

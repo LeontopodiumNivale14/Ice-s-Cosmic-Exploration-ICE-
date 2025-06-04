@@ -3,19 +3,11 @@ using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Interface.Utility.Table;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Game.WKS;
-using ICE.Enums;
 using ICE.Utilities.Cosmic;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading.Channels;
-using System.Xml.Schema;
 using static ICE.Utilities.CosmicHelper;
 
 namespace ICE.Ui
@@ -954,10 +946,11 @@ namespace ICE.Ui
                     bool fishMission = entry.Value.Attributes.HasFlag(MissionAttributes.Fish);
                     bool collectableMission = entry.Value.Attributes.HasFlag(MissionAttributes.Collectables);
                     bool stellerReductionMission = entry.Value.Attributes.HasFlag(MissionAttributes.ReducedItems);
+                    bool hasFishSpot = C.FishingSpots.ContainsKey(entry.Value.MarkerId);
 
                     bool dualclass = craftMission && (gatherMission || fishMission);
 
-                    if (fishMission || (gatherMission && (collectableMission || stellerReductionMission)) || (gatherMission && entry.Value.NodeSet == 0))
+                    if ((fishMission && craftMission) || (fishMission && !hasFishSpot) || (gatherMission && (collectableMission || stellerReductionMission)) || (gatherMission && entry.Value.NodeSet == 0))
                     {
                         unsupported = true;
                     }
@@ -1028,7 +1021,14 @@ namespace ICE.Ui
                         ImGui.TextColored(new Vector4(1f, 0f, 0f, 1f), MissionName);
                         if (ImGui.IsItemHovered())
                         {
-                            ImGui.SetTooltip("Currently can only be done in manual mode");
+                            if (fishMission && !hasFishSpot)
+                            {
+                                ImGui.SetTooltip("Missing fishing spot. Go to Gathering settings and click 'Save Fishing Spot'");
+                            }
+                            else
+                            {
+                                ImGui.SetTooltip("Currently can only be done in manual mode");
+                            }
                         }
                     }
                     else

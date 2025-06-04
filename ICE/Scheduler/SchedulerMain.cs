@@ -87,8 +87,11 @@ namespace ICE.Scheduler
                     case var s when s.HasFlag(GrabMission):
                         TaskMissionFind.Enqueue();
                         break;
-                    case var s when s.HasFlag(ManualMode) || s.HasFlag(Fish):
+                    case var s when s.HasFlag(ManualMode):
                         TaskManualMode.ZenMode();
+                        break;
+                    case var s when s.HasFlag(Fish) && s.HasFlag(ExecutingMission):
+                        TaskFish.TryEnqueueFishing();
                         break;
                     case var s when s.HasFlag(Gather) && s.HasFlag(ExecutingMission):
                         TaskGather.TryEnqueueGathering();

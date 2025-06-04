@@ -79,6 +79,7 @@ namespace ICE
         public bool UseOnFisher { get; set; } = false;
         public bool PreventOvercap { get; set; } = false;
         public bool UseOnlyInMission { get; set; } = false;
+        public Dictionary<uint, Vector4> FishingSpots { get; set; } = new();
 
         // Gamba settings
         public List<Gamba> GambaItemWeights { get; set; } = new();
